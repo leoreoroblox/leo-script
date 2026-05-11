@@ -5,238 +5,165 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>kg腳本官网</title>
     <style>
-        :root { --main: #00ffcc; --card: rgba(10,10,10,0.85); }
+        :root { --main: #00ffcc; --card: rgba(10,10,10,0.95); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        /* 🌈 彩虹動態背景 */
+        /* 🌈 動態彩虹背景 */
         body { 
             margin: 0; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh;
             background: linear-gradient(45deg, #ff0000, #ff7f00, #22cc22, #00bbff, #8a2be2);
             background-size: 300% 300%;
-            animation: rainbow 8s ease infinite;
+            animation: rainbow 12s ease infinite;
         }
         @keyframes rainbow { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
 
-        /* 公告欄 */
-        .global-notice { position: fixed; top: 0; width: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); border-bottom: 2px solid var(--main); padding: 10px 40px; z-index: 9000; font-size: 13px; color: var(--main); text-align: center; }
-        
-        /* 🍔 三條線選單 (左上角) */
-        .menu-btn { position: fixed; top: 8px; left: 15px; font-size: 24px; z-index: 9999; cursor: pointer; color: white; text-shadow: 0 0 5px black; }
-        .sidebar { position: fixed; left: -250px; top: 0; width: 220px; height: 100%; background: rgba(0,0,0,0.95); transition: 0.3s; z-index: 9500; padding-top: 60px; border-right: 2px solid var(--main); box-shadow: 5px 0 20px rgba(0,0,0,0.8); }
+        /* 📢 加長版公告欄 */
+        .notice-overlay { 
+            position: fixed; top: 0; width: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); 
+            border-bottom: 2px solid var(--main); padding: 15px 50px 15px 20px; z-index: 9999; 
+            display: flex; flex-direction: column; align-items: center; transition: 0.5s;
+        }
+        .notice-main { font-size: 18px; font-weight: bold; color: #fff; }
+        .notice-sub { font-size: 13px; color: var(--main); text-align: center; margin-top: 5px; }
+        .close-notice { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 28px; color: #ff4444; cursor: pointer; }
+
+        /* 🍔 導航選單 */
+        .menu-btn { position: fixed; top: 15px; left: 15px; font-size: 24px; z-index: 10000; cursor: pointer; color: white; }
+        .sidebar { position: fixed; left: -250px; top: 0; width: 230px; height: 100%; background: rgba(0,0,0,0.9); transition: 0.4s; z-index: 9500; padding-top: 60px; border-right: 1px solid var(--main); }
         .sidebar.open { left: 0; }
-        .menu-item { padding: 15px 20px; font-size: 16px; border-bottom: 1px solid #333; cursor: pointer; transition: 0.2s; }
-        .menu-item:hover { background: var(--main); color: black; font-weight: bold; }
+        .menu-item { padding: 15px 25px; border-bottom: 1px solid #222; cursor: pointer; font-size: 15px; }
+        .menu-item:hover { background: var(--main); color: #000; }
 
-        /* 開機動畫 */
-        #loader { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 1s; }
-        .load-logo { width: 110px; height: 110px; border-radius: 50%; border: 3px solid var(--main); box-shadow: 0 0 30px var(--main); }
-        #load-msg { margin-top: 25px; font-size: 15px; letter-spacing: 3px; color: var(--main); font-weight: bold; }
+        /* 主容器 */
+        .container { height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .card { background: var(--card); border-radius: 25px; border: 1px solid rgba(0, 255, 204, 0.3); padding: 40px 30px; width: 100%; max-width: 400px; text-align: center; backdrop-filter: blur(20px); }
 
-        /* 介面卡片 */
-        .container { position: relative; height: 100vh; display: flex; justify-content: center; align-items: center; }
-        .page { position: absolute; width: 92%; max-width: 400px; opacity: 0; pointer-events: none; transition: 0.4s; transform: scale(0.9); }
-        .page.active { opacity: 1; pointer-events: auto; transform: scale(1); }
-        .card { background: var(--card); border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); padding: 30px; backdrop-filter: blur(20px); text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        /* Logo */
+        .kg-logo { width: 100px; height: 100px; border-radius: 50%; border: 2px solid #fff; margin-bottom: 20px; cursor: pointer; }
 
-        /* 元素 */
-        .kg-logo { width: 80px; height: 80px; border-radius: 50%; border: 2px solid white; margin-bottom: 15px; cursor: pointer; }
-        input, textarea { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: none; background: rgba(255,255,255,0.1); color: white; font-size: 15px; outline: none; }
-        
-        /* 🎨 彩色按鈕 */
-        .btn { width: 100%; padding: 15px; margin-top: 10px; border-radius: 10px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
-        .btn-green { background: #00d26a; }
-        .btn-blue { background: #00aaff; }
-        .btn-purple { background: #9d00ff; }
-        .btn-orange { background: #ff7700; }
+        input { width: 100%; padding: 16px; margin: 15px 0; border-radius: 12px; border: 1px solid #333; background: #000; color: #fff; text-align: center; outline: none; }
+        .btn-verify { width: 100%; padding: 16px; border-radius: 12px; border: none; background: #00ffcc; color: #000; font-weight: bold; font-size: 17px; cursor: pointer; }
 
-        /* 底部聯絡 */
-        .footer-links { position: absolute; bottom: -60px; width: 100%; text-align: center; }
-        .qq-link { color: white; text-decoration: none; font-size: 13px; margin: 0 10px; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.3); }
+        /* 聯繫按鈕 */
+        .contact-group { display: flex; justify-content: center; gap: 15px; margin-top: 30px; }
+        .contact-btn { flex: 1; padding: 12px; border-radius: 50px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; text-decoration: none; font-size: 14px; text-align: center; }
 
-        /* 滾動條隱藏 */
-        ::-webkit-scrollbar { display: none; }
+        /* 🌐 語言選擇新介面 (彈窗) */
+        #lang-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 15000; justify-content: center; align-items: center; }
+        .lang-card { background: #111; width: 85%; max-width: 320px; border-radius: 20px; border: 1px solid var(--main); padding: 25px; text-align: center; }
+        .lang-opt { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; background: #222; color: #fff; border: 1px solid #333; font-weight: bold; cursor: pointer; }
+        .lang-opt:hover { border-color: var(--main); color: var(--main); }
 
-        /* 管理員後台 */
-        #admin-panel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; padding: 30px; text-align: center; }
+        /* 後台介面 */
+        #admin-panel { display: none; position: fixed; inset: 0; background: #000; z-index: 11000; padding: 40px 20px; text-align: center; }
+        .admin-btn { width: 100%; padding: 20px; margin: 10px 0; border-radius: 15px; border: none; font-size: 18px; font-weight: bold; cursor: pointer; }
+
+        #loader { position: fixed; inset: 0; background: #000; z-index: 12000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.6s; }
     </style>
 </head>
 <body>
 
-<div class="global-notice" id="notice-bar"><span id="cloud-notice">📡 正在同步天網指揮中心...</span></div>
+<div class="notice-overlay" id="notice-box">
+    <div class="notice-main" id="txt-n-title">kg腳本官网 | 防護系統</div>
+    <div class="notice-sub" id="txt-n-sub">歡迎來到 KG 官網。最新版本 v11.5 已發布。</div>
+    <div class="close-notice" onclick="closeNotice()">×</div>
+</div>
 
 <div class="menu-btn" onclick="toggleMenu()">☰</div>
-
 <div class="sidebar" id="sidebar">
-    <div class="menu-item" onclick="nav('home')">🏠 主頁 (驗證)</div>
-    <div class="menu-item" onclick="nav('keygen')">🔑 卡密生成器</div>
-    <div class="menu-item" onclick="nav('log')">📜 更新日誌</div>
-    <div class="menu-item" onclick="nav('feedback')">💬 用戶評價</div>
-    <div class="menu-item" onclick="toggleLang()">🌐 語言切換 (中/英)</div>
-    <div class="menu-item" onclick="alert('核心注入功能開發中，敬請期待！')">✨ 核心功能 (敬請期待)</div>
-    <div class="menu-item" onclick="alert('防封號系統優化中，敬請期待！')">🛡️ 防護系統 (敬請期待)</div>
+    <div class="menu-item" id="txt-m-home" onclick="nav('home')">🏠 驗證主頁</div>
+    <div class="menu-item" id="txt-m-lang" onclick="openLang()">🌐 語言切換 / Language</div>
+    <div class="menu-item" onclick="alert(curLang==='en'?'Dev in progress...':'核心功能開發中，敬請期待！')">✨ 核心功能</div>
+    <div class="menu-item" onclick="alert(curLang==='en'?'Dev in progress...':'防對接系統優化中，敬請期待！')">🛡️ 防護系統</div>
+</div>
+
+<div id="lang-modal">
+    <div class="lang-card">
+        <h3 style="margin-top:0;">選擇語言 / Select Language</h3>
+        <button class="lang-opt" onclick="setLang('zh-cn')">简体中文</button>
+        <button class="lang-opt" onclick="setLang('zh-hk')">繁體中文</button>
+        <button class="lang-opt" onclick="setLang('en')">English</button>
+        <p style="color:#555; margin-bottom:0; cursor:pointer;" onclick="closeLang()">取消 / Cancel</p>
+    </div>
 </div>
 
 <div id="loader">
-    <img src="https://telegra.ph/file/0c3260c675339d675685a.jpg" class="load-logo">
-    <div id="load-msg">INITIATING...</div>
+    <img src="https://i.postimg.cc/mD8zM9f1/kg-logo.png" style="width:80px;">
+    <p id="load-msg" style="color:#00ffcc; margin-top:20px;">正在加密衛星連線...</p>
 </div>
 
 <div class="container">
-    
-    <div class="page active" id="pg-home">
-        <div class="card">
-            <img src="https://telegra.ph/file/0c3260c675339d675685a.jpg" class="kg-logo" id="admin-trigger">
-            <h2 id="t-title" style="margin:0;">kg腳本官网</h2>
-            <div id="maint-overlay" style="display:none; color:red; font-size:12px; margin:5px 0;">[ 維護中 ]</div>
-            
-            <input type="text" id="iKey" placeholder="請輸入授權碼">
-            <button class="btn btn-green" id="t-btn1" onclick="verify()">驗證並注入腳本</button>
-            <button class="btn btn-blue" onclick="nav('keygen')">獲取卡密</button>
+    <div class="card">
+        <img src="https://i.postimg.cc/mD8zM9f1/kg-logo.png" class="kg-logo" id="admin-trigger">
+        <h2 id="txt-v-title" style="margin:0;">驗證中心</h2>
+        <input type="text" id="authKey" placeholder="請輸入您的授權碼">
+        <button class="btn-verify" id="txt-v-btn" onclick="verify()">驗證並注入腳本</button>
 
-            <div class="footer-links">
-                <a href="mqqwpa://im/chat?chat_type=wpa&uin=3065395172" class="qq-link">聯繫張碩</a>
-                <a href="mqqwpa://im/chat?chat_type=wpa&uin=2031480494" class="qq-link">聯繫雷歐</a>
-            </div>
+        <div class="contact-group">
+            <a href="mqqwpa://im/chat?chat_type=wpa&uin=3065395172" class="contact-btn" id="txt-c-1">聯繫張碩</a>
+            <a href="mqqwpa://im/chat?chat_type=wpa&uin=2031480494" class="contact-btn" id="txt-c-2">聯繫雷歐</a>
         </div>
     </div>
-
-    <div class="page" id="pg-keygen">
-        <div class="card">
-            <h2 id="t-kg">🔑 卡密生成器</h2>
-            <p style="font-size:12px; color:#aaa;">點擊生成專屬臨時卡密</p>
-            <input type="text" id="gen-key" placeholder="生成結果會顯示在這裡" readonly>
-            <button class="btn btn-purple" onclick="generateKey()">⚡ 一鍵生成卡密</button>
-            <button class="btn btn-orange" onclick="nav('home')">返回主頁</button>
-        </div>
-    </div>
-
-    <div class="page" id="pg-log">
-        <div class="card" style="text-align: left;">
-            <h2>📜 更新日誌</h2>
-            <div style="height: 150px; overflow-y: auto; font-size:13px; color:#ddd; background: rgba(0,0,0,0.5); padding: 10px; border-radius:10px;">
-                <p><b>v9.0 (最新)</b><br>- 新增彩虹動態背景<br>- 新增卡密生成器<br>- 升級雲端公告系統</p>
-                <p><b>v8.5</b><br>- 修復注入閃退問題</p>
-                <p><b>v8.0</b><br>- 介面大改版</p>
-            </div>
-            <button class="btn btn-orange" onclick="nav('home')">返回主頁</button>
-        </div>
-    </div>
-
-    <div class="page" id="pg-feedback">
-        <div class="card">
-            <h2>💬 用戶評價</h2>
-            <div style="font-size:12px; color:#0f0; text-align:left; margin-bottom:10px;">
-                ★ 牛逼，腳本很穩！- 玩家A<br>
-                ★ 雷歐大佬太神啦 - 玩家B
-            </div>
-            <textarea placeholder="輸入你的評價..." rows="3"></textarea>
-            <button class="btn btn-blue" onclick="alert('感謝評價！已提交。')">提交評價</button>
-            <button class="btn btn-orange" onclick="nav('home')">返回主頁</button>
-        </div>
-    </div>
-
 </div>
 
 <div id="admin-panel">
-    <div class="card" style="margin-top: 50px;">
-        <h2 style="color:red;">🔥 指揮官後台</h2>
-        <p>點擊下方按鈕，直接跳轉去修改公告與維護開關</p>
-        <button class="btn btn-purple" onclick="openGist()">📝 修改全網公告 (去Gist)</button>
-        <button class="btn btn-orange" style="margin-top:20px;" onclick="closeAdmin()">關閉後台</button>
+    <h2 style="color:#00ffcc; text-align:left; padding-left:20px;">LEOREOROBLOX DASHBOARD <span style="float:right; color:#ff4444; font-size:14px;" onclick="closeAdmin()">CLOSE</span></h2>
+    <hr style="border-color:#222;">
+    <div style="padding:20px;">
+        <button class="admin-btn" style="background:#00ffcc; color:#000;">發布公告</button>
+        <button class="admin-btn" style="background:#ffbb33; color:#000;" onclick="toggleMaint()">切換維護狀態</button>
     </div>
 </div>
 
 <script>
-    // --- 1. 開機語錄 ---
-    const quotes = ["正在加載彩虹引擎...", "檢測到 LeoReoRoblox 訊號...", "所有模組上線中..."];
+    let isMaint = false;
+    let curLang = 'zh-hk';
+
+    const langData = {
+        'zh-hk': { home: "🏠 驗證主頁", lang: "🌐 語言切換", vTitle: "驗證中心", vPlaceholder: "請輸入您的授權碼", vBtn: "驗證並注入腳本", c1: "聯繫張碩", c2: "聯繫雷歐", nTitle: "kg腳本官网 | 防護系統", load: "正在加密衛星連線..." },
+        'zh-cn': { home: "🏠 验证主页", lang: "🌐 语言切换", vTitle: "验证中心", vPlaceholder: "请输入您的授权码", vBtn: "验证并注入脚本", c1: "联系张硕", c2: "联系雷欧", nTitle: "kg脚本官网 | 防护系统", load: "正在加密卫星连线..." },
+        'en': { home: "🏠 Home", lang: "🌐 Language", vTitle: "Verification", vPlaceholder: "Enter License Key", vBtn: "Verify & Inject", c1: "Contact ZS", c2: "Contact Leo", nTitle: "KG Script | Protection", load: "Encrypted connecting..." }
+    };
+
+    function openLang() { document.getElementById('lang-modal').style.display = 'flex'; toggleMenu(); }
+    function closeLang() { document.getElementById('lang-modal').style.display = 'none'; }
+    function setLang(l) {
+        curLang = l;
+        const d = langData[l];
+        document.getElementById('txt-m-home').innerText = d.home;
+        document.getElementById('txt-m-lang').innerText = d.lang;
+        document.getElementById('txt-v-title').innerText = d.vTitle;
+        document.getElementById('authKey').placeholder = d.vPlaceholder;
+        document.getElementById('txt-v-btn').innerText = d.vBtn;
+        document.getElementById('txt-c-1').innerText = d.c1;
+        document.getElementById('txt-c-2').innerText = d.c2;
+        document.getElementById('txt-n-title').innerText = d.nTitle;
+        closeLang();
+    }
+
+    const quotes = ["加密連線中...", "檢測安全...", "啟動中..."];
     let qIdx = 0;
     const qTimer = setInterval(() => {
-        const msgEl = document.getElementById('load-msg');
-        if(msgEl) msgEl.innerText = quotes[qIdx++];
+        document.getElementById('load-msg').innerText = quotes[qIdx++];
         if(qIdx >= quotes.length) {
             clearInterval(qTimer);
             document.getElementById('loader').style.opacity = '0';
-            setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 1000);
+            setTimeout(() => document.getElementById('loader').style.display = 'none', 600);
         }
     }, 1000);
 
-    // --- 2. 雲端同步系統 ---
-    const GIST_RAW_URL = "https://gist.github.com/cyc123456mo-debug/89a66e79e5a6b9228dd4e080ef09bafe/raw/6c1a6dfe0c8cea30c30018fc6fc358cb14aa1e0e/kg";
-    let isMaint = false;
-
-    async function syncCloud() {
-        try {
-            const proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(GIST_RAW_URL);
-            const response = await fetch(proxy);
-            const data = await response.json();
-            if (data.contents) {
-                const cloudContent = data.contents.trim();
-                document.getElementById('cloud-notice').innerText = cloudContent;
-                if(cloudContent.includes("MAINT:ON")) {
-                    isMaint = true;
-                    document.getElementById('maint-overlay').style.display = 'block';
-                    document.getElementById('notice-bar').style.background = 'rgba(255,0,0,0.5)';
-                } else {
-                    isMaint = false;
-                    document.getElementById('maint-overlay').style.display = 'none';
-                    document.getElementById('notice-bar').style.background = 'rgba(0,0,0,0.6)';
-                }
-            }
-        } catch (e) {
-            document.getElementById('cloud-notice').innerText = "📡 正在連接備用衛星...";
-        }
-    }
-    syncCloud(); setInterval(syncCloud, 60000);
-
-    // --- 3. 側邊選單控制 ---
-    function toggleMenu() {
-        const sb = document.getElementById('sidebar');
-        sb.classList.toggle('open');
-    }
-
-    function nav(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById('pg-' + pageId).classList.add('active');
-        document.getElementById('sidebar').classList.remove('open');
-    }
-
-    // --- 4. 功能邏輯 ---
-    function verify() {
-        if(isMaint) alert('⚠️ 系統維護中，無法驗證！');
-        else if(document.getElementById('iKey').value === '') alert('請輸入卡密！');
-        else alert('✅ 驗證成功！正在注入腳本...');
-    }
-
-    function generateKey() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let key = 'KG-';
-        for(let i=0; i<12; i++) key += chars.charAt(Math.floor(Math.random() * chars.length));
-        document.getElementById('gen-key').value = key;
-    }
-
-    // --- 5. 語言切換 ---
-    let isEn = false;
-    function toggleLang() {
-        isEn = !isEn;
-        document.getElementById('t-title').innerText = isEn ? "KG Script Official" : "kg腳本官网";
-        document.getElementById('t-btn1').innerText = isEn ? "Verify & Inject" : "驗證並注入腳本";
-        document.getElementById('t-kg').innerText = isEn ? "🔑 Key Gen" : "🔑 卡密生成器";
-        document.getElementById('sidebar').classList.remove('open');
-        alert(isEn ? 'Language switched to English!' : '已切換為中文！');
-    }
-
-    // --- 6. 管理員後台 (長按頭像) ---
-    let longPress;
-    const trigger = document.getElementById('admin-trigger');
-    trigger.onmousedown = trigger.ontouchstart = () => { longPress = setTimeout(() => {
-        let p = prompt("請輸入指揮官密碼：");
-        if(p === 'admin') document.getElementById('admin-panel').style.display = 'block';
-    }, 2000); };
-    trigger.onmouseup = trigger.ontouchend = () => { clearTimeout(longPress); };
-
+    function closeNotice() { document.getElementById('notice-box').style.display = 'none'; }
+    function toggleMenu() { document.getElementById('sidebar').classList.toggle('open'); }
+    function verify() { alert(curLang === 'en' ? 'Verifying...' : '正在加密驗證...'); }
     function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
-    function openGist() { window.open("https://gist.github.com/cyc123456mo-debug/89a66e79e5a6b9228dd4e080ef09bafe/edit", "_blank"); }
 
+    let lp;
+    const trig = document.getElementById('admin-trigger');
+    trig.onmousedown = trig.ontouchstart = () => { lp = setTimeout(() => {
+        if(prompt("Admin Key:") === 'admin') document.getElementById('admin-panel').style.display = 'block';
+    }, 2000); };
+    trig.onmouseup = trig.ontouchend = () => clearTimeout(lp);
 </script>
+
 </body>
 </html>
