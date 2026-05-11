@@ -1,198 +1,227 @@
 <!DOCTYPE html>
-<html lang="zh-TW" oncontextmenu="return false" onselectstart="return false" oncopy="return false">
+<html lang="zh-TW" oncontextmenu="return false" onselectstart="return false">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LEO SCRIPT | 防破解旗艦版</title>
+    <title>LEO HUB | ULTIMATE</title>
     <style>
-        /* 保持原有的極致視覺樣式 */
-        :root { --primary: #00ffcc; --bg-grad: linear-gradient(125deg, #000, #0a1128, #1a0a2e, #000); }
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; color: #fff; background: var(--bg-grad); background-size: 400% 400%; animation: flow 15s infinite ease; -webkit-user-select: none; user-select: none; }
+        :root { --primary: #00ffcc; --bg: #050505; --glass: rgba(255,255,255,0.03); --admin-red: #ff4d4d; --gold: #ffd700; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; color: #fff; background: #000; }
+        
+        /* 終極背景與粒子 */
+        #bg-layer { position: fixed; inset: 0; z-index: -1; background: linear-gradient(125deg, #050505, #0a1128, #1a0a2e); background-size: 400% 400%; animation: flow 15s infinite; }
         @keyframes flow { 0% {background-position:0% 50%} 50% {background-position:100% 50%} 100% {background-position:0% 50%} }
-        
-        canvas#particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-        
-        /* 毛玻璃與 UI 框架 */
-        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; }
+        canvas#particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.6; }
+
+        /* 通用組件 */
+        .glass { background: var(--glass); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+        .btn { background: var(--primary); color: #000; padding: 12px; border-radius: 12px; border: none; font-weight: 900; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 10px; text-transform: uppercase; }
+        .btn:active { transform: scale(0.95); }
+        input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); color: #fff; outline: none; box-sizing: border-box; }
+
+        /* 導航 */
         .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; align-items: center; padding: 0 20px; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; padding-top: 80px; transition: 0.5s; z-index: 90; }
+        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; padding-top: 80px; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 90; }
         .sidebar.active { left: 0; }
+        .nav-item { padding: 15px 25px; cursor: pointer; transition: 0.3s; opacity: 0.5; display: flex; align-items: center; gap: 10px; font-size: 14px; }
+        .nav-item:hover, .nav-item.active { opacity: 1; color: var(--primary); background: rgba(0,255,204,0.06); border-right: 3px solid var(--primary); }
+
+        /* 視圖切換系統 */
+        .view { display: none; padding: 80px 20px 40px; height: 100vh; overflow-y: auto; box-sizing: border-box; scroll-behavior: smooth; }
+        .view.active { display: block; animation: viewIn 0.4s ease-out; }
+        @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 卡片與內容樣式 */
+        .card { padding: 25px; margin-bottom: 20px; }
+        .section-title { color: var(--primary); border-left: 3px solid var(--primary); padding-left: 12px; margin-bottom: 15px; font-weight: 800; font-size: 14px; }
+        .status-on { width: 8px; height: 8px; background: #00ff88; border-radius: 50%; display: inline-block; margin-right: 10px; box-shadow: 0 0 10px #00ff88; }
         
-        .view { display: none; padding: 80px 20px; height: 100vh; overflow-y: auto; box-sizing: border-box; }
-        .view.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* 卡片與按鈕 */
-        .script-card { display: flex; justify-content: space-between; align-items: center; padding: 18px; margin-bottom: 12px; transition: 0.3s; }
-        .btn-prime { background: var(--primary); color: #000; padding: 10px 20px; border-radius: 10px; border: none; font-weight: 900; cursor: pointer; transition: 0.2s; }
-        .btn-prime:active { transform: scale(0.9); }
-
-        #loader { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.5s; }
-        .progress-bar { width: 200px; height: 2px; background: #111; border-radius: 10px; margin-top: 20px; overflow: hidden; }
-        .progress-fill { width: 0%; height: 100%; background: var(--primary); box-shadow: 0 0 10px var(--primary); transition: 0.1s; }
-
-        #toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; padding: 12px 25px; border-radius: 50px; font-weight: bold; transition: 0.4s; z-index: 1000; }
+        /* Toast & Loader */
+        #toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; padding: 14px 35px; border-radius: 50px; font-weight: 900; transition: 0.5s; z-index: 2000; }
     </style>
 </head>
 <body>
 
+<div id="bg-layer"></div>
 <canvas id="particles"></canvas>
 
-<div id="loader">
-    <div style="letter-spacing: 8px; font-weight: 900; color: var(--primary);">LEO SYSTEM</div>
-    <div class="progress-bar"><div class="progress-fill" id="lp"></div></div>
-</div>
-
 <header class="header glass">
-    <div id="menu-btn" style="cursor:pointer; font-size: 20px;">☰</div>
-    <div style="margin-left:15px; font-weight: 900; letter-spacing:1px;">LEO SCRIPT <span style="font-size:10px; opacity:0.4;">SECURE MODE</span></div>
+    <div onclick="toggleMenu()" style="cursor:pointer; font-size:24px;">☰</div>
+    <div style="margin-left:20px; font-weight:900; letter-spacing:2px;">LEO HUB <span id="user-display" style="font-size:10px; opacity:0.4; margin-left:10px;">GUEST</span></div>
 </header>
 
-<aside class="sidebar glass" id="sb">
-    <div style="padding: 20px 25px; font-size: 14px; opacity: 0.6;">功能菜單</div>
-    <div class="nav-item" onclick="nv('v1')" style="padding: 15px 25px; cursor:pointer;">📢 系統公告</div>
-    <div class="nav-item" id="nav-scripts" onclick="nv('v2')" style="padding: 15px 25px; cursor:pointer; opacity: 0.3;">🔒 腳本列表 (鎖定)</div>
+<aside class="sidebar glass" id="sidebar">
+    <div class="nav-item active" onclick="go('v-auth')">🔑 帳戶驗證</div>
+    <div class="nav-item" onclick="go('v-copy')">📋 腳本複製</div>
+    <div class="nav-item" onclick="go('v-features')">🛠️ 腳本功能</div>
+    <div class="nav-item" onclick="go('v-creators')">👥 腳本創作者</div>
+    <div class="nav-item" onclick="go('v-logs')">📅 更新日誌</div>
+    <div class="nav-item" onclick="go('v-demo')">📺 腳本演示</div>
+    <div class="nav-item" onclick="go('v-others')">📦 其他腳本</div>
+    <div class="nav-item" onclick="go('v-support')" style="color:var(--gold);">💰 支持一下 ($)</div>
+    <div class="nav-item" onclick="go('v-admin')" id="m-admin" style="display:none; color:var(--admin-red);">⚙️ 管理後台</div>
+    <div class="nav-item" onclick="location.reload()" style="border-top:1px solid rgba(255,255,255,0.1); margin-top:10px;">🚪 登出系統</div>
 </aside>
 
 <main>
-    <div id="v1" class="view active">
-        <div class="glass" style="max-width:380px; margin: 40px auto; padding: 30px; text-align: center;">
-            <h3>身份驗證</h3>
-            <input type="text" id="user" placeholder="輸入用戶名" style="width:100%; padding:12px; margin: 20px 0; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:#fff; outline:none;">
-            <button class="btn-prime" style="width:100%;" onclick="doLogin()">解鎖腳本</button>
+    <div id="v-auth" class="view active">
+        <div class="glass card" style="max-width:400px; margin: 40px auto; text-align:center;">
+            <h2>系統登入</h2>
+            <input type="text" id="au-u" placeholder="用戶名稱">
+            <input type="password" id="au-p" placeholder="存取密碼">
+            <button class="btn" onclick="auth()">確認登入</button>
+            <p onclick="switchAuth()" id="au-sw" style="font-size:12px; color:var(--primary); cursor:pointer; margin-top:15px;">點此註冊帳號</p>
         </div>
     </div>
 
-    <div id="v2" class="view">
-        <div style="max-width:500px; margin:auto;" id="script-list"></div>
+    <div id="v-copy" class="view">
+        <div style="max-width:600px; margin:auto;" id="script-list"></div>
+    </div>
+
+    <div id="v-features" class="view">
+        <div class="glass card" style="max-width:600px; margin:auto;">
+            <div class="section-title">核心功能介紹</div>
+            <p>· 自動農場 (Auto Farm) - 極速獲取資源</p>
+            <p>· 玩家傳送 (Teleport) - 全圖無縫瞬移</p>
+            <p>· 視覺輔助 (ESP) - 透視方塊、玩家線條</p>
+            <p>· 戰鬥增強 (Combat) - 無後座力、自動瞄準</p>
+            <p>· 數據加載 - 支持最新的 loadstring 加密協議</p>
+        </div>
+    </div>
+
+    <div id="v-creators" class="view">
+        <div class="glass card" style="max-width:600px; margin:auto;">
+            <div class="section-title">腳本創作者名單</div>
+            <p>總策劃：張碩 | 總創作者：張碩 | 創作者：張碩</p>
+            <p>合作者：雷歐REO_ROBLOX</p>
+            <div class="section-title" style="margin-top:20px;">網站開發團隊</div>
+            <p>網站總負責人：雷歐REO_ROBLOX</p>
+            <p>網站創作人 / 程式 / 設計：雷歐REO_ROBLOX</p>
+            <p>網站管理員：雷歐REO_ROBLOX，張碩</p>
+            <div class="section-title" style="margin-top:20px;">特別貢獻</div>
+            <p>雷歐REO_ROBLOX、張碩、以及所有 KG 腳本使用者</p>
+        </div>
+    </div>
+
+    <div id="v-logs" class="view">
+        <div class="glass card" style="max-width:600px; margin:auto;">
+            <div class="section-title">版本更新日誌</div>
+            <p><b>V10.2 (2026.05.11)</b> - 介面大重構，功能模塊完全獨立。</p>
+            <p><b>V10.0</b> - 引入多用戶註冊與管理員管理系統。</p>
+            <p><b>V9.5</b> - 修復了部分遊戲被腳本偵測的問題。</p>
+        </div>
+    </div>
+
+    <div id="v-demo" class="view">
+        <div class="glass card" style="max-width:600px; margin:auto; text-align:center;">
+            <div class="section-title">影片/動圖演示</div>
+            <div style="width:100%; height:300px; background:rgba(0,0,0,0.5); border-radius:10px; display:flex; align-items:center; justify-content:center;">
+                <p style="color:#444;">[ 腳本運行演示影片加載中... ]</p>
+            </div>
+            <p style="margin-top:20px; font-size:14px; opacity:0.6;">演示腳本：墨水遊戲漢化版 V2.0</p>
+        </div>
+    </div>
+
+    <div id="v-others" class="view">
+        <div class="glass card" style="max-width:600px; margin:auto;">
+            <div class="section-title">推薦其他開源腳本</div>
+            <p>· Infinite Yield (最全功能指令)</p>
+            <p>· Dex Explorer (開發者必備)</p>
+            <p>· Remote Spy (封包偵測)</p>
+        </div>
+    </div>
+
+    <div id="v-support" class="view">
+        <div class="glass card" style="max-width:500px; margin:auto; text-align:center;">
+            <h2 style="color:var(--gold);">💰 支持一下 ($)</h2>
+            <p>如果你覺得這款腳本好用，歡迎打賞支持創作者：</p>
+            <div style="width:200px; height:200px; background:#fff; margin:20px auto; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#000;">
+                QR CODE
+            </div>
+            <p style="font-size:12px; opacity:0.5;">感謝您的支持，這將用於伺服器維護</p>
+        </div>
+    </div>
+
+    <div id="v-admin" class="view">
+        <div style="max-width:600px; margin:auto;">
+            <div class="glass card">
+                <h3>新增腳本資源</h3>
+                <input type="text" id="ad-n" placeholder="腳本名稱">
+                <input type="text" id="ad-c" placeholder="代碼內容">
+                <button class="btn" onclick="addS()">確認發布</button>
+            </div>
+            <div class="glass card" id="ad-ulist"></div>
+        </div>
     </div>
 </main>
 
-<div id="toast">操作成功</div>
+<div id="toast">SYSTEM</div>
 
 <script>
-    /**
-     * --- 核心安全防護模組 (防破解) ---
-     */
-    (function() {
-        // 1. 無限 Debugger 陷阱：檢測控制台
-        function antiDebug() {
-            function detector() {
-                try {
-                    (function() {
-                        (function() {
-                            debugger;
-                        }).apply('run');
-                    }).apply('run');
-                } catch (e) {}
-            }
-            setInterval(detector, 100);
-        }
-        antiDebug();
+    let users = JSON.parse(localStorage.getItem('leo_u')) || [];
+    let scripts = JSON.parse(localStorage.getItem('leo_s')) || [{n:"墨水遊戲", c:"print('LEO')"}];
+    let session = null, reg = false;
 
-        // 2. 禁用快捷鍵
-        window.addEventListener('keydown', function(e) {
-            // F12, Ctrl+Shift+I, Ctrl+U, Ctrl+S
-            if (e.keyCode === 123 || 
-               (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || 
-               (e.ctrlKey && e.keyCode === 85) || 
-               (e.ctrlKey && e.keyCode === 83)) {
-                e.preventDefault();
-                return false;
-            }
-        });
+    // 安全
+    (function(){ window.addEventListener('keydown',e=>{if(e.keyCode===123||(e.ctrlKey&&e.shiftKey&&e.keyCode===73))e.preventDefault();}); setInterval(()=>{debugger;},1000); })();
 
-        // 3. 控制台清空與反爬取
-        setInterval(function() {
-            console.clear();
-            console.log("%c雷歐腳本安全防護：未授權操作已記錄", "color:red; font-size:20px; font-weight:bold;");
-        }, 1000);
-    })();
-
-    /**
-     * --- 核心業務邏輯 (混淆與功能) ---
-     */
-    let logged = false;
-    // 腳本數據加密存儲 (Base64)
-    const db = [
-        {n: "墨水遊戲漢化", c: "bG9hZHN0cmluZyhkYXRhKQ=="},
-        {n: "最新皮腳本", c: "bG9hZHN0cmluZyhkYXRhKQ=="},
-        {n: "TX-Pro 縫合", c: "bG9hZHN0cmluZyhkYXRhKQ=="}
-    ];
-
-    function showToast(msg) {
-        const t = document.getElementById('toast');
-        t.innerText = msg; t.style.bottom = '30px';
-        setTimeout(() => t.style.bottom = '-80px', 2000);
-    }
-
-    function doLogin() {
-        const u = document.getElementById('user').value;
-        if(u.trim().length < 1) return showToast("請輸入用戶名");
-        logged = true;
-        document.getElementById('nav-scripts').style.opacity = "1";
-        document.getElementById('nav-scripts').innerText = "⚡ 腳本列表";
-        showToast("🔓 驗證通過，功能已解鎖");
-        nv('v2');
-    }
-
-    function nv(id) {
-        if(id === 'v2' && !logged) return showToast("⚠️ 請先完成驗證");
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    function msg(t){ const o = document.getElementById('toast'); o.innerText=t; o.style.bottom='40px'; setTimeout(()=>o.style.bottom='-80px',2500); }
+    function toggleMenu(){ document.getElementById('sidebar').classList.toggle('active'); }
+    function go(id){
+        if(id!=='v-auth' && id!=='v-credits' && !session) return msg("⚠️ 請先完成驗證");
+        document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        document.getElementById('sb').classList.remove('active');
+        toggleMenu();
+        if(id==='v-copy') drawS();
+        if(id==='v-admin') drawA();
     }
 
-    function copyCode(idx) {
-        // 執行時才解密，防止靜態分析
-        const code = atob(db[idx].c);
-        navigator.clipboard.writeText(code);
-        showToast("✨ 代碼已複製");
+    function switchAuth(){ reg=!reg; document.getElementById('au-sw').innerText=reg?"已有帳號？返回登入":"點此註冊帳號"; document.getElementById('au-btn').innerText=reg?"確認註冊":"確認登入"; }
+
+    function auth(){
+        const u = document.getElementById('au-u').value.trim(), p = document.getElementById('au-p').value.trim();
+        if(!u||!p) return msg("❌ 請填寫內容");
+        if(reg){
+            if(users.find(x=>x.u===u)) return msg("❌ 帳號已存在");
+            users.push({u,p,role:'user'}); localStorage.setItem('leo_u', JSON.stringify(users));
+            msg("✅ 註冊成功"); switchAuth();
+        } else {
+            if(u==="admin" && p==="LEO888"){ login({u:"管理員",role:"admin"}); }
+            else { const t=users.find(x=>x.u===u&&x.p===p); if(t) login(t); else msg("❌ 密碼錯誤"); }
+        }
     }
 
-    // 初始化與加載動畫
-    window.onload = () => {
-        let p = 0;
-        const it = setInterval(() => {
-            p += 5;
-            document.getElementById('lp').style.width = p + '%';
-            if(p >= 100) {
-                clearInterval(it);
-                setTimeout(() => document.getElementById('loader').style.opacity = '0', 300);
-                setTimeout(() => document.getElementById('loader').style.display = 'none', 800);
-            }
-        }, 50);
+    function login(u){
+        session=u; document.getElementById('user-display').innerText=u.u;
+        if(u.role==='admin') document.getElementById('m-admin').style.display='flex';
+        msg("🔓 歡迎回來"); go('v-copy');
+    }
 
-        document.getElementById('menu-btn').onclick = () => document.getElementById('sb').classList.toggle('active');
-
-        // 渲染列表
-        document.getElementById('script-list').innerHTML = db.map((s, i) => `
-            <div class="glass script-card">
-                <b>${s.n}</b>
-                <button class="btn-prime" onclick="copyCode(${i})">獲取</button>
+    function drawS(){
+        document.getElementById('script-list').innerHTML = scripts.map((s,i)=>`
+            <div class="glass card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div><span class="status-on"></span><b>${s.n}</b></div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn" style="width:auto; padding:8px 15px;" onclick="copyS('${btoa(s.c)}')">複製</button>
+                    ${session.role==='admin'?`<button class="btn" style="background:red; color:white; width:auto; padding:8px 15px;" onclick="delS(${i})">刪</button>`:''}
+                </div>
             </div>
         `).join('');
+    }
 
-        // 粒子動畫
-        const cvs = document.getElementById('particles');
-        const ctx = cvs.getContext('2d');
-        let pts = [];
-        cvs.width = window.innerWidth; cvs.height = window.innerHeight;
-        for(let i=0; i<60; i++) pts.push({x: Math.random()*cvs.width, y: Math.random()*cvs.height, vx: Math.random()-0.5, vy: Math.random()-0.5});
-        
-        function move() {
-            ctx.clearRect(0,0,cvs.width,cvs.height);
-            ctx.fillStyle = "rgba(0, 255, 204, 0.2)";
-            pts.forEach(p => {
-                p.x += p.vx; p.y += p.vy;
-                if(p.x<0 || p.x>cvs.width) p.vx*=-1;
-                if(p.y<0 || p.y>cvs.height) p.vy*=-1;
-                ctx.beginPath(); ctx.arc(p.x, p.y, 1, 0, Math.PI*2); ctx.fill();
-            });
-            requestAnimationFrame(move);
-        }
-        move();
-    };
+    function copyS(b){ navigator.clipboard.writeText(atob(b)); msg("📋 已複製到剪貼簿"); }
+    function addS(){ const n=document.getElementById('ad-n').value, c=document.getElementById('ad-c').value; scripts.push({n,c}); localStorage.setItem('leo_s', JSON.stringify(scripts)); msg("✅ 已發布"); }
+    function delS(i){ scripts.splice(i,1); localStorage.setItem('leo_s', JSON.stringify(scripts)); drawS(); }
+    function drawA(){ document.getElementById('ad-ulist').innerHTML = "<h4>用戶清單</h4>" + users.map(u=>`· ${u.u}`).join('<br>'); }
+
+    // 背景
+    const cvs=document.getElementById('particles'), ctx=cvs.getContext('2d');
+    let pts=[]; cvs.width=window.innerWidth; cvs.height=window.innerHeight;
+    for(let i=0; i<60; i++) pts.push({x:Math.random()*cvs.width, y:Math.random()*cvs.height, vx:Math.random()-0.5, vy:Math.random()-0.5});
+    function run(){ ctx.clearRect(0,0,cvs.width,cvs.height); ctx.fillStyle="rgba(0, 255, 204, 0.2)";
+        pts.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>cvs.width) p.vx*=-1; if(p.y<0||p.y>cvs.height) p.vy*=-1; ctx.beginPath(); ctx.arc(p.x,p.y,1,0,Math.PI*2); ctx.fill(); });
+        requestAnimationFrame(run); }
+    run();
 </script>
 </body>
 </html>
