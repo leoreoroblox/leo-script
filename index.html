@@ -3,98 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KG</title>
+    <title>KG腳本官網 - 完整復原版</title>
     <style>
-        :root { --main: #00ffcc; --bg: #050505; }
+        :root { --main: #00ffcc; --bg: #050505; --red: #ff4444; --card: rgba(15,15,15,0.95); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         
         body { 
-            margin: 0; background: var(--bg); color: white; 
-            font-family: 'Consolas', monospace; overflow: hidden; height: 100vh;
-            display: flex; justify-content: center; align-items: center;
+            margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden;
+            background: linear-gradient(45deg, #0f0f0f, #1a1a1a);
         }
 
-        /* 🟦 加載介面 */
-        #loader { 
-            position: fixed; inset: 0; background: #000; z-index: 20000; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-        }
-        .progress-container { width: 240px; height: 2px; background: #111; margin-top: 25px; position: relative; }
-        .progress-bar { height: 100%; width: 0%; background: var(--main); box-shadow: 0 0 15px var(--main); transition: width 0.1s linear; }
-        #progress-perc { color: var(--main); font-size: 24px; font-weight: bold; margin-bottom: 5px; }
-        #loader-status { font-size: 10px; color: #444; letter-spacing: 2px; text-transform: uppercase; }
+        /* 🟦 加載介面 - 進度條復原 */
+        #loader { position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .prog-wrap { width: 200px; height: 3px; background: #111; margin-top: 20px; border-radius: 5px; overflow: hidden; }
+        .prog-bar { height: 100%; width: 0%; background: var(--main); box-shadow: 0 0 15px var(--main); transition: 0.1s; }
 
-        /* 💳 驗證卡片 (全刪後僅存核心) */
-        .card { 
-            text-align: center; opacity: 0; transform: scale(0.9); transition: 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            width: 100%; max-width: 320px;
-        }
-        .card.show { opacity: 1; transform: scale(1); }
+        /* 📢 公告欄復原 */
+        .notice { position: fixed; top: 0; width: 100%; background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--main); padding: 15px; z-index: 9999; text-align: center; transition: 0.5s; }
+        .notice.hide { transform: translateY(-100%); }
 
-        .logo-text { font-size: 42px; font-weight: 900; color: #fff; letter-spacing: -2px; margin-bottom: 40px; }
-        .logo-text span { color: var(--main); }
+        /* 🍔 側邊欄復原 */
+        .menu-btn { position: fixed; top: 20px; left: 20px; font-size: 28px; z-index: 10000; cursor: pointer; }
+        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #0a0a0a; transition: 0.4s; z-index: 9500; padding-top: 80px; border-right: 1px solid var(--main); }
+        .sidebar.open { left: 0; }
+        .menu-item { padding: 18px 25px; border-bottom: 1px solid #111; cursor: pointer; transition: 0.2s; }
+        .menu-item:active { background: var(--main); color: #000; }
 
-        input { 
-            width: 100%; padding: 20px; border: none; border-bottom: 2px solid #222; 
-            background: transparent; color: #fff; text-align: center; font-size: 16px; transition: 0.3s;
-        }
-        input:focus { border-bottom-color: var(--main); }
+        /* 🖼️ Logo Guard - 修復圖片失效問題 */
+        .logo-box { width: 100px; height: 100px; margin: 0 auto 20px; border-radius: 50%; border: 2px solid #fff; overflow: hidden; display: flex; justify-content: center; align-items: center; background: #000; font-weight: bold; font-size: 32px; color: var(--main); }
+        .logo-img { width: 100%; height: 100%; object-fit: cover; }
 
-        .btn-main { 
-            width: 100%; padding: 20px; margin-top: 30px; border: none; 
-            background: var(--main); color: #000; font-weight: 900; cursor: pointer;
-            transition: all 0.3s; clip-path: polygon(0 0, 90% 0, 100% 30%, 100% 100%, 10% 100%, 0 70%);
-        }
-        .btn-main:active { transform: scale(0.9); filter: brightness(1.5); box-shadow: 0 0 40px var(--main); }
+        /* 💳 主驗證卡片復原 */
+        .container { height: 100vh; display: flex; justify-content: center; align-items: center; transition: 0.5s; }
+        .card { background: var(--card); border-radius: 25px; padding: 40px 30px; width: 90%; max-width: 400px; text-align: center; border: 1px solid #222; }
+        
+        input { width: 100%; padding: 18px; margin: 20px 0; border-radius: 12px; border: 1px solid #333; background: #000; color: #fff; text-align: center; }
 
+        /* ✨ 特效按鈕復原 */
+        .btn { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-main { background: var(--main); color: #000; font-size: 18px; }
+        .btn-main:active { transform: scale(0.92); box-shadow: 0 0 30px var(--main); filter: brightness(1.2); }
+        
+        .contact-group { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-sub { background: #1a1a1a; color: #fff; border: 1px solid #333; font-size: 14px; }
+
+        /* 👑 管理後台復原 */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 11000; justify-content: center; align-items: center; }
+        .modal-content { background: #0a0a0a; width: 90%; max-width: 450px; border: 1px solid var(--main); padding: 25px; border-radius: 15px; max-height: 80vh; overflow-y: auto; }
+        .key-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #111; font-family: monospace; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
     </style>
 </head>
 <body>
 
 <div id="loader">
-    <div id="progress-perc">0%</div>
-    <div id="loader-status">System Initializing</div>
-    <div class="progress-container">
-        <div class="progress-bar" id="bar"></div>
+    <div id="p-txt" style="color:var(--main); font-weight:900; font-size:20px;">0%</div>
+    <div class="prog-wrap"><div class="prog-bar" id="bar"></div></div>
+</div>
+
+<div class="notice" id="notice">
+    <div>KG腳本官網 - 系統環境已復原</div>
+    <div style="font-size:12px; color:#666; margin-top:5px;" onclick="this.parentElement.classList.add('hide')">點擊關閉公告 [×]</div>
+</div>
+
+<div class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</div>
+<div class="sidebar" id="sidebar">
+    <div class="menu-item" onclick="location.reload()">🏠 返回主頁</div>
+    <div class="menu-item" onclick="alert('核心注入功能開發中！')">✨ 核心功能</div>
+    <div class="menu-item" onclick="document.getElementById('m-admin').style.display='flex'">👤 管理後台</div>
+</div>
+
+<div class="container">
+    <div class="card">
+        <div class="logo-box">
+            <img src="https://i.postimg.cc/mD8zM9f1/kg-logo.png" class="logo-img" onerror="this.style.display='none';">
+            <span style="position:absolute;">KG</span>
+        </div>
+        <h2 style="margin:0;">KG腳本官網</h2>
+        <p style="color:#444; font-size:12px; margin-bottom:20px;">歡迎使用復原版本</p>
+        
+        <input type="password" id="auth-in" placeholder="請輸入授權碼...">
+        <button class="btn btn-main" onclick="doAuth()">驗證並進入</button>
+
+        <div class="contact-group">
+            <button class="btn btn-sub" onclick="window.location.href='mqqwpa://im/chat?chat_type=wpa&uin=3065395172'">聯繫張碩</button>
+            <button class="btn btn-sub" onclick="window.location.href='mqqwpa://im/chat?chat_type=wpa&uin=2031480494'">聯繫雷歐</button>
+        </div>
     </div>
 </div>
 
-<div class="card" id="main-ui">
-    <div class="logo-text">KG<span>.</span></div>
-    <input type="password" id="auth-code" placeholder="ENTER ACCESS CODE">
-    <button class="btn-main" onclick="checkAuth()">AUTHENTICATE</button>
+<div class="modal" id="m-admin">
+    <div class="modal-content">
+        <h3 style="color:var(--main);">授權管理中心</h3>
+        <button class="btn btn-main" style="margin-bottom:15px;" onclick="gen()">⚡ 生成隨機授權碼</button>
+        <div id="list" style="background:#000; border-radius:10px; padding:5px;"></div>
+        <button class="btn btn-sub" style="margin-top:15px; border-color:var(--red); color:var(--red);" onclick="del()">🗑️ 批量刪除</button>
+        <button class="btn btn-sub" style="margin-top:10px;" onclick="this.parentElement.parentElement.style.display='none'">關閉</button>
+    </div>
 </div>
 
 <script>
-    // 加載邏輯
+    let keys = JSON.parse(localStorage.getItem('kg_keys_final')) || [];
+
     window.onload = () => {
-        let progress = 0;
-        const bar = document.getElementById('bar');
-        const perc = document.getElementById('progress-perc');
-        
-        const interval = setInterval(() => {
-            progress += Math.floor(Math.random() * 4) + 1;
-            if (progress >= 100) {
-                progress = 100;
-                clearInterval(interval);
-                setTimeout(() => {
-                    document.getElementById('loader').style.display = 'none';
-                    document.getElementById('main-ui').classList.add('show');
-                }, 400);
+        let p = 0;
+        const bar = document.getElementById('bar'), txt = document.getElementById('p-txt');
+        const timer = setInterval(() => {
+            p += Math.floor(Math.random() * 5) + 2;
+            if(p >= 100) {
+                p = 100; clearInterval(timer);
+                setTimeout(() => document.getElementById('loader').style.display='none', 500);
             }
-            bar.style.width = progress + "%";
-            perc.innerText = progress + "%";
+            bar.style.width = p + "%"; txt.innerText = p + "%";
         }, 50);
+        updateList();
     };
 
-    function checkAuth() {
-        const val = document.getElementById('auth-code').value;
-        if(val === 'KGscriptWEB:admin') {
-            alert('ACCEPTED');
-            location.reload();
-        } else if(val !== "") {
-            alert('DENIED');
-        }
+    function doAuth() {
+        const v = document.getElementById('auth-in').value;
+        if(v === 'KGscriptWEB:admin') {
+            document.getElementById('m-admin').style.display='flex';
+        } else if(v) { alert('授權碼無效'); }
+    }
+
+    function gen() {
+        const c = "KG-" + Math.random().toString(36).substr(2, 8).toUpperCase();
+        keys.push({ id: Date.now(), code: c, active: true });
+        save();
+    }
+
+    function del() {
+        const cbs = document.querySelectorAll('.ck:checked');
+        const ids = Array.from(cbs).map(x => parseInt(x.dataset.id));
+        keys = keys.filter(k => !ids.includes(k.id));
+        save();
+    }
+
+    function save() { localStorage.setItem('kg_keys_final', JSON.stringify(keys)); updateList(); }
+
+    function updateList() {
+        const box = document.getElementById('list');
+        box.innerHTML = keys.length ? keys.map(k => `
+            <div class="key-item">
+                <input type="checkbox" class="ck" data-id="${k.id}">
+                <div class="dot" style="background:${k.active?'#00ffcc':'#ff4444'}"></div>
+                <span>${k.code}</span>
+            </div>
+        `).join('') : '<div style="padding:20px; color:#333;">無授權數據</div>';
     }
 </script>
 </body>
