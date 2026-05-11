@@ -5,28 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>雷歐腳本</title>
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
+        body { 
+            margin: 0; color: #fff; font-family: sans-serif; overflow: hidden;
+            background: linear-gradient(125deg, #2c3e50, #27ae60, #2980b9, #8e44ad, #c0392b);
+            background-size: 400% 400%; animation: b-move 15s infinite;
+        }
+        @keyframes b-move { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+
         /* 載入動畫 */
         #ld { position: fixed; inset: 0; background: #000; z-index: 9; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        #pg { width: 200px; height: 4px; background: #1a1a1a; border-radius: 2px; margin: 20px; overflow: hidden; }
+        #pg { width: 200px; height: 4px; background: #333; border-radius: 2px; margin: 20px; overflow: hidden; }
         #pb { width: 0%; height: 100%; background: #0fc; box-shadow: 0 0 10px #0fc; transition: 0.1s; }
         
-        .hd { position: fixed; top: 0; width: 100%; height: 50px; background: rgba(0,0,0,0.8); display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid #1a1a1a; z-index: 5; }
-        .sb { position: fixed; left: -250px; top: 0; width: 240px; height: 100%; background: #050505; transition: 0.3s; padding-top: 60px; border-right: 1px solid #1a1a1a; z-index: 8; }
+        .hd { position: fixed; top: 0; width: 100%; height: 50px; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: flex; align-items: center; padding: 0 15px; z-index: 5; }
+        .sb { position: fixed; left: -250px; top: 0; width: 240px; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); transition: 0.3s; padding-top: 60px; z-index: 8; }
         .sb.on { left: 0; }
-        .ni { padding: 15px 25px; cursor: pointer; color: #aaa; font-size: 14px; }
-        .ni.act { color: #0fc; background: rgba(0,255,204,0.1); }
+        .ni { padding: 15px 25px; cursor: pointer; color: #eee; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .ni.locked { opacity: 0.5; cursor: not-allowed; }
 
         .vw { display: none; padding: 70px 20px; height: 100vh; overflow-y: auto; }
         .vw.act { display: block; }
-        .cd { background: #0a0a0a; border: 1px solid #1c1c1c; border-radius: 15px; padding: 20px; margin-bottom: 15px; }
+        .cd { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 20px; margin-bottom: 15px; backdrop-filter: blur(5px); }
         
-        input { width: 100%; padding: 12px; background: #121212; border: 1px solid #1c1c1c; border-radius: 10px; color: #fff; margin-bottom: 10px; }
-        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
+        input { width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #fff; margin-bottom: 10px; outline: none; }
+        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .b-m { background: #0fc; color: #000; }
+        .b-m:active { transform: scale(0.98); opacity: 0.8; }
         
-        .s-cd { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #1a1a1a; }
-        .b-g { color: #f33; border: 1px solid #f33; background: none; padding: 5px 12px; border-radius: 8px; cursor: pointer; }
+        .s-cd { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); }
+        .s-info b { font-size: 14px; display: block; color: #eee; }
+        .s-info small { font-size: 11px; color: #888; }
+        .b-g { color: #ff4d4d; border: 1px solid #ff4d4d; background: rgba(255,77,77,0.1); padding: 6px 15px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -38,64 +47,92 @@
 </div>
 
 <div class="hd">
-    <div onclick="tk()" style="cursor:pointer;">☰</div>
-    <div style="margin-left:15px; color:#0fc; font-weight:bold;">雷歐腳本</div>
+    <div onclick="tk()" style="cursor:pointer; font-size:20px;">☰</div>
+    <div style="margin-left:15px; color:#0fc; font-weight:bold; letter-spacing:1px;">雷歐腳本</div>
 </div>
 
 <div class="sb" id="sb">
-    <div class="ni act" onclick="nv('v1')">📢 系統公告</div>
-    <div class="ni" onclick="nv('v2')">🔗 其他腳本</div>
+    <div class="ni" onclick="nv('v1')">📢 系統公告</div>
+    <div class="ni locked" id="m-s" onclick="nv('v2')">🔗 其他腳本 (需登入)</div>
     <div class="ni" onclick="nv('v3')">👨‍💻 創作者</div>
 </div>
 
-<div id="v1" class="vw act">
-    <div class="cd">
-        <h2>雷歐登入</h2>
-        <input type="text" id="u" placeholder="用戶名">
-        <button class="btn b-m" onclick="lg()">登入</button>
+<div id="app">
+    <div id="v1" class="vw act">
+        <div class="container" style="max-width:400px; margin:auto;">
+            <div class="cd">
+                <h2 style="margin:0 0 5px 0;">雷歐登入</h2>
+                <p style="font-size:12px; color:#aaa; margin-bottom:20px;">請登入以使用腳本服務</p>
+                <input type="text" id="u" placeholder="用戶名稱">
+                <input type="password" id="p" placeholder="帳戶密碼">
+                <button class="btn b-m" onclick="lg()">登入</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="v2" class="vw">
+        <div class="container" style="max-width:450px; margin:auto;">
+            <h3 style="margin:0 0 15px 10px;">第三方腳本推薦</h3>
+            <div id="sl"></div>
+        </div>
+    </div>
+
+    <div id="v3" class="vw">
+        <div class="cd" style="text-align:center;">
+            <h3>創作者：雷歐 REO</h3>
+            <p style="font-size:13px; color:#ccc;">致力於提供最優質的腳本體驗</p>
+        </div>
     </div>
 </div>
 
-<div id="v2" class="vw">
-    <div class="cd" id="sl"></div>
-</div>
-
-<div id="v3" class="vw">
-    <div class="cd"><h3>創作者：雷歐 REO</h3></div>
-</div>
-
 <script>
+    let isLogged = false;
     const sc = [
-        { n: "墨水遊戲", c: `loadstring(game:HttpGet("https://raw.githubusercontent.com/hdjsjjdgrhj/script-hub/refs/heads/main/Ringta"))()` },
-        { n: "最新皮腳本", c: `getgenv().XiaoPi="皮脚本QQ群1002100032" loadstring(game:HttpGet("https://raw.githubusercontent.com/xiaopi77/xiaopi77/main/QQ1002100032-Roblox-Pi-script.lua"))()` },
-        { n: "縫合脚本", c: `loadstring(game:HttpGet("https://raw.githubusercontent.com/JsYb666/TX-Free-YYDS/refs/heads/main/TX-Pro-Free"))()` },
-        { n: "被遺棄", c: `loadstring(game:HttpGet("https://raw.githubusercontent.com/JackUltraman/fish/refs/heads/main/%E8%A2%AB%E9%81%97%E5%BC%83"))()` },
-        { n: "死鐵鬼", c: `loadstring(game:HttpGet("https://raw.githubusercontent.com/thantzy/thanhub/refs/heads/main/thanv1"))()` },
-        { n: "葉脚本", c: `loadstring(game:HttpGet("https://raw.githubusercontent.com/roblox-ye/QQ515966991/refs/heads/main/ROBLOX-CNVIP-XIAOYE.lua"))()` }
+        { n: "墨水遊戲漢化防風", d: "高效漢化載入器", c: `loadstring(game:HttpGet("https://raw.githubusercontent.com/hdjsjjdgrhj/script-hub/refs/heads/main/Ringta"))()` },
+        { n: "最新皮腳本", d: "QQ群: 1002100032", c: `getgenv().XiaoPi="皮脚本QQ群1002100032" loadstring(game:HttpGet("https://raw.githubusercontent.com/xiaopi77/xiaopi77/main/QQ1002100032-Roblox-Pi-script.lua"))()` },
+        { n: "縫合脚本 (TX-Pro)", d: "全部複製，包括註釋", c: `loadstring(game:HttpGet("https://raw.githubusercontent.com/JsYb666/TX-Free-YYDS/refs/heads/main/TX-Pro-Free"))()` },
+        { n: "被遺棄腳本", d: "By JackUltraman", c: `loadstring(game:HttpGet("https://raw.githubusercontent.com/JackUltraman/fish/refs/heads/main/%E8%A2%AB%E9%81%97%E5%BC%83"))()` },
+        { n: "死鐵鬼腳本", d: "ThanHub V1", c: `loadstring(game:HttpGet("https://raw.githubusercontent.com/thantzy/thanhub/refs/heads/main/thanv1"))()` },
+        { n: "葉脚本", d: "VIP 專屬功能", c: `loadstring(game:HttpGet("https://raw.githubusercontent.com/roblox-ye/QQ515966991/refs/heads/main/ROBLOX-CNVIP-XIAOYE.lua"))()` }
     ];
 
     function tk() { document.getElementById('sb').classList.toggle('on'); }
+    
     function nv(id) {
+        if(id === 'v2' && !isLogged) { alert("請先登入帳號！"); return; }
         document.querySelectorAll('.vw').forEach(v => v.classList.remove('act'));
         document.getElementById(id).classList.add('act');
-        tk();
+        if(document.getElementById('sb').classList.contains('on')) tk();
     }
 
-    function lg() { alert("登入成功"); nv('v2'); }
-    function cp(i) { navigator.clipboard.writeText(sc[i].c); alert("複製成功"); }
+    function lg() {
+        const user = document.getElementById('u').value;
+        if(user.length > 0) {
+            isLogged = true;
+            document.getElementById('m-s').classList.remove('locked');
+            document.getElementById('m-s').innerText = "🔗 其他腳本";
+            alert("登入成功，已解鎖腳本功能！");
+            nv('v2');
+        } else { alert("請輸入用戶名稱"); }
+    }
+
+    function cp(i) {
+        navigator.clipboard.writeText(sc[i].c);
+        alert("雷歐腳本：代碼已複製到剪貼簿");
+    }
 
     window.onload = () => {
         let p = 0;
         const i = setInterval(() => {
-            p += 10;
+            p += 5;
             document.getElementById('pb').style.width = p + '%';
             document.getElementById('pt').innerText = p + '%';
             if (p >= 100) { clearInterval(i); setTimeout(() => document.getElementById('ld').style.display='none', 300); }
-        }, 100);
+        }, 60);
 
         document.getElementById('sl').innerHTML = sc.map((s, i) => `
             <div class="s-cd">
-                <span>${s.n}</span>
+                <div class="s-info"><b>${s.n}</b><small>${s.d}</small></div>
                 <button class="b-g" onclick="cp(${i})">獲取</button>
             </div>
         `).join('');
