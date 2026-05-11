@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雷歐腳本中心</title>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: white; text-align: center; padding: 20px; }
+        .box { background: #1e1e1e; padding: 20px; border-radius: 15px; max-width: 400px; margin: auto; border: 1px solid #333; }
+        input { width: 80%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #000; color: white; }
+        button { background: #ff4757; color: white; border: none; padding: 12px 20px; border-radius: 8px; width: 85%; cursor: pointer; }
+        #adminArea { display: none; margin-top: 20px; border-top: 1px solid #333; padding-top: 20px; }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h1>雷歐 ROBLOX 腳本</h1>
+    <input type="text" id="inputKey" placeholder="輸入卡密">
+    <button onclick="verify()">驗證卡密</button>
+    <p style="color:#444; font-size:10px" onclick="login()">管理員入口</p>
+    <div id="adminArea">
+        <button style="background:#2ecc71" onclick="gen()">生成卡密</button>
+        <div id="keyList" style="color:#aaa; margin-top:10px"></div>
+    </div>
+</div>
+<script>
+    let keys = [];
+    function verify() {
+        const input = document.getElementById('inputKey').value;
+        const i = keys.indexOf(input);
+        if (i > -1) { keys.splice(i, 1); alert("成功！腳本已複製。"); }
+        else { alert("無效卡密！"); }
+    }
+    function login() { if(prompt("密碼")==="123") document.getElementById('adminArea').style.display="block"; }
+    function gen() {
+        const k = "LEO-" + Math.random().toString(36).substr(2,6).toUpperCase();
+        keys.push(k);
+        document.getElementById('keyList').innerHTML = keys.join('<br>');
+    }
+</script>
+</body>
+</html>
