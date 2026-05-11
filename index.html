@@ -3,167 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>kg腳本官网</title>
+    <title>KG腳本官網</title>
     <style>
-        :root { --main: #00ffcc; --card: rgba(10,10,10,0.95); }
+        :root { --main: #00ffcc; --card: rgba(15,15,15,0.95); --modal: rgba(20,20,20,0.98); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        /* 🌈 動態彩虹背景 */
         body { 
             margin: 0; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh;
             background: linear-gradient(45deg, #ff0000, #ff7f00, #22cc22, #00bbff, #8a2be2);
-            background-size: 300% 300%;
-            animation: rainbow 12s ease infinite;
+            background-size: 300% 300%; animation: rainbow 12s ease infinite;
         }
         @keyframes rainbow { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
 
-        /* 📢 加長版公告欄 */
+        /* 📢 公告欄 */
         .notice-overlay { 
-            position: fixed; top: 0; width: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); 
-            border-bottom: 2px solid var(--main); padding: 15px 50px 15px 20px; z-index: 9999; 
-            display: flex; flex-direction: column; align-items: center; transition: 0.5s;
+            position: fixed; top: 0; width: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); 
+            border-bottom: 2px solid var(--main); padding: 20px; z-index: 9999; 
+            display: flex; flex-direction: column; align-items: center; transition: all 0.6s;
         }
-        .notice-main { font-size: 18px; font-weight: bold; color: #fff; }
-        .notice-sub { font-size: 13px; color: var(--main); text-align: center; margin-top: 5px; }
-        .close-notice { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 28px; color: #ff4444; cursor: pointer; }
+        .notice-overlay.hide { opacity: 0; transform: translateY(-100%); }
+        .close-notice { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 30px; color: #ff4444; cursor: pointer; }
 
-        /* 🍔 導航選單 */
-        .menu-btn { position: fixed; top: 15px; left: 15px; font-size: 24px; z-index: 10000; cursor: pointer; color: white; }
-        .sidebar { position: fixed; left: -250px; top: 0; width: 230px; height: 100%; background: rgba(0,0,0,0.9); transition: 0.4s; z-index: 9500; padding-top: 60px; border-right: 1px solid var(--main); }
+        /* 🏢 主容器位移 */
+        .container { 
+            height: 100vh; display: flex; justify-content: center; align-items: center; 
+            padding: 20px; transition: 0.7s; transform: translateY(60px); 
+        }
+        .container.up { transform: translateY(0); }
+
+        /* 💳 基礎卡片 */
+        .card { 
+            background: var(--card); border-radius: 30px; border: 1px solid rgba(0, 255, 204, 0.3); 
+            padding: 40px; width: 100%; max-width: 400px; text-align: center; backdrop-filter: blur(25px);
+        }
+        .logo-container {
+            width: 100px; height: 100px; margin: 0 auto 20px; border-radius: 50%; border: 3px solid #fff;
+            overflow: hidden; background: #000; display: flex; justify-content: center; align-items: center; font-size: 40px; color: var(--main);
+        }
+        .kg-logo { width: 100%; height: 100%; object-fit: cover; }
+
+        /* 🍔 側邊欄 */
+        .menu-btn { position: fixed; top: 20px; left: 20px; font-size: 28px; z-index: 10000; cursor: pointer; }
+        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: var(--modal); transition: 0.4s; z-index: 9500; padding-top: 80px; border-right: 1px solid var(--main); }
         .sidebar.open { left: 0; }
-        .menu-item { padding: 15px 25px; border-bottom: 1px solid #222; cursor: pointer; font-size: 15px; }
+        .menu-item { padding: 15px 25px; border-bottom: 1px solid #222; cursor: pointer; display: flex; align-items: center; gap: 10px; }
         .menu-item:hover { background: var(--main); color: #000; }
 
-        /* 主容器 */
-        .container { height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .card { background: var(--card); border-radius: 25px; border: 1px solid rgba(0, 255, 204, 0.3); padding: 40px 30px; width: 100%; max-width: 400px; text-align: center; backdrop-filter: blur(20px); }
+        /* 🔲 獨立新介面 (全屏覆蓋) */
+        .sub-page { 
+            display: none; position: fixed; inset: 0; background: #000; z-index: 11000; 
+            flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center;
+        }
+        .btn-back { margin-top: 30px; padding: 12px 40px; border-radius: 50px; background: #333; color: #fff; border: none; cursor: pointer; }
 
-        /* Logo */
-        .kg-logo { width: 100px; height: 100px; border-radius: 50%; border: 2px solid #fff; margin-bottom: 20px; cursor: pointer; }
-
-        input { width: 100%; padding: 16px; margin: 15px 0; border-radius: 12px; border: 1px solid #333; background: #000; color: #fff; text-align: center; outline: none; }
-        .btn-verify { width: 100%; padding: 16px; border-radius: 12px; border: none; background: #00ffcc; color: #000; font-weight: bold; font-size: 17px; cursor: pointer; }
-
-        /* 聯繫按鈕 */
-        .contact-group { display: flex; justify-content: center; gap: 15px; margin-top: 30px; }
-        .contact-btn { flex: 1; padding: 12px; border-radius: 50px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; text-decoration: none; font-size: 14px; text-align: center; }
-
-        /* 🌐 語言選擇新介面 (彈窗) */
-        #lang-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 15000; justify-content: center; align-items: center; }
-        .lang-card { background: #111; width: 85%; max-width: 320px; border-radius: 20px; border: 1px solid var(--main); padding: 25px; text-align: center; }
-        .lang-opt { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; background: #222; color: #fff; border: 1px solid #333; font-weight: bold; cursor: pointer; }
-        .lang-opt:hover { border-color: var(--main); color: var(--main); }
-
-        /* 後台介面 */
-        #admin-panel { display: none; position: fixed; inset: 0; background: #000; z-index: 11000; padding: 40px 20px; text-align: center; }
-        .admin-btn { width: 100%; padding: 20px; margin: 10px 0; border-radius: 15px; border: none; font-size: 18px; font-weight: bold; cursor: pointer; }
-
-        #loader { position: fixed; inset: 0; background: #000; z-index: 12000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.6s; }
+        input { width: 100%; padding: 18px; margin: 15px 0; border-radius: 15px; border: 1px solid #333; background: #000; color: #fff; text-align: center; outline: none; }
+        .btn-verify { width: 100%; padding: 18px; border-radius: 15px; border: none; background: var(--main); color: #000; font-weight: bold; font-size: 18px; cursor: pointer; }
+        
+        /* 🔔 Toast */
+        #toast { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); background: var(--main); color: #000; padding: 10px 30px; border-radius: 50px; display: none; z-index: 15000; font-weight: bold; }
+        #loader { position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.8s; }
     </style>
 </head>
 <body>
 
+<div id="toast">已切換</div>
+
 <div class="notice-overlay" id="notice-box">
-    <div class="notice-main" id="txt-n-title">kg腳本官网 | 防護系統</div>
-    <div class="notice-sub" id="txt-n-sub">歡迎來到 KG 官網。最新版本 v11.5 已發布。</div>
+    <div style="font-weight:bold;">KG腳本官網 | 防護系統</div>
+    <div style="font-size:13px; color:var(--main); margin-top:5px;">最新版本 v11.5 已發布。</div>
     <div class="close-notice" onclick="closeNotice()">×</div>
 </div>
 
 <div class="menu-btn" onclick="toggleMenu()">☰</div>
 <div class="sidebar" id="sidebar">
-    <div class="menu-item" id="txt-m-home" onclick="nav('home')">🏠 驗證主頁</div>
-    <div class="menu-item" id="txt-m-lang" onclick="openLang()">🌐 語言切換 / Language</div>
-    <div class="menu-item" onclick="alert(curLang==='en'?'Dev in progress...':'核心功能開發中，敬請期待！')">✨ 核心功能</div>
-    <div class="menu-item" onclick="alert(curLang==='en'?'Dev in progress...':'防對接系統優化中，敬請期待！')">🛡️ 防護系統</div>
+    <div class="menu-item" onclick="openPage('p-copy')">📄 腳本複製</div>
+    <div class="menu-item" onclick="openPage('p-func')">⚡ 腳本功能</div>
+    <div class="menu-item" onclick="openPage('p-author')">👤 腳本創作者</div>
+    <div class="menu-item" onclick="openPage('p-log')">📅 更新日誌</div>
+    <div class="menu-item" onclick="openPage('p-demo')">🎥 腳本演示</div>
+    <div class="menu-item" onclick="openPage('p-other')">📦 其他腳本</div>
+    <div class="menu-item" onclick="openPage('p-support')">💰 支持一下 ($)</div>
+    <div class="menu-item" onclick="openPage('p-lang')">🌐 語言切換</div>
 </div>
 
-<div id="lang-modal">
-    <div class="lang-card">
-        <h3 style="margin-top:0;">選擇語言 / Select Language</h3>
-        <button class="lang-opt" onclick="setLang('zh-cn')">简体中文</button>
-        <button class="lang-opt" onclick="setLang('zh-hk')">繁體中文</button>
-        <button class="lang-opt" onclick="setLang('en')">English</button>
-        <p style="color:#555; margin-bottom:0; cursor:pointer;" onclick="closeLang()">取消 / Cancel</p>
+<div class="sub-page" id="p-copy"><h2>腳本複製</h2><p>敬請期待！</p><button class="btn-back" onclick="closePage()">返回</button></div>
+<div class="sub-page" id="p-func"><h2>腳本功能</h2><p>敬請期待！</p><button class="btn-back" onclick="closePage()">返回</button></div>
+<div class="sub-page" id="p-author"><h2>腳本創作者</h2><p>敬請期待！</p><button class="btn-back" onclick="closePage()">返回</button></div>
+<div class="sub-page" id="p-log"><h2>更新日誌</h2><p>敬請期待！</p><button class="btn-back" onclick="closePage()">返回</button></div>
+<div class="sub-page" id="p-demo"><h2>腳本演示</h2><p>敬請期待！</p><button class="btn-back" onclick="closePage()">返回</button></div>
+<div class="sub-page" id="p-other"><h2>其他腳本</h2><p>敬請期待！</p><button class="btn-back" onclick="closePage()">返回</button></div>
+<div class="sub-page" id="p-support"><h2>支持一下 ($)</h2><p>敬請期待！</p><button class="btn-back" onclick="closePage()">返回</button></div>
+<div class="sub-page" id="p-lang"><h2>語言切換</h2><button class="btn-verify" style="width:200px; margin-bottom:15px;" onclick="setLang('繁體')">繁體中文</button><button class="btn-verify" style="width:200px;" onclick="setLang('English')">English</button><button class="btn-back" onclick="closePage()">返回</button></div>
+
+<div class="sub-page" id="p-admin">
+    <div class="logo-container" style="border-color:var(--main); box-shadow: 0 0 20px var(--main);">KG</div>
+    <h1 style="color:var(--main);">歡迎回來，管理員</h1>
+    <p style="color:#aaa;">您已成功進入 KG 腳本官網後台系統</p>
+    <div style="margin-top:40px; display:grid; gap:10px; width:100%; max-width:300px;">
+        <button class="btn-verify" onclick="alert('維護模式已開啟')">維護模式切換</button>
+        <button class="btn-verify" style="background:#ff4444; color:#fff;" onclick="location.reload()">登出系統</button>
     </div>
 </div>
 
-<div id="loader">
-    <img src="https://i.postimg.cc/mD8zM9f1/kg-logo.png" style="width:80px;">
-    <p id="load-msg" style="color:#00ffcc; margin-top:20px;">正在加密衛星連線...</p>
-</div>
+<div id="loader"><div class="logo-container" style="border:none;">KG</div><p style="color:var(--main); margin-top:20px; font-weight:bold;">官網系統啟動中...</p></div>
 
-<div class="container">
+<div class="container" id="main-container">
     <div class="card">
-        <img src="https://i.postimg.cc/mD8zM9f1/kg-logo.png" class="kg-logo" id="admin-trigger">
-        <h2 id="txt-v-title" style="margin:0;">驗證中心</h2>
-        <input type="text" id="authKey" placeholder="請輸入您的授權碼">
-        <button class="btn-verify" id="txt-v-btn" onclick="verify()">驗證並注入腳本</button>
-
-        <div class="contact-group">
-            <a href="mqqwpa://im/chat?chat_type=wpa&uin=3065395172" class="contact-btn" id="txt-c-1">聯繫張碩</a>
-            <a href="mqqwpa://im/chat?chat_type=wpa&uin=2031480494" class="contact-btn" id="txt-c-2">聯繫雷歐</a>
+        <div class="logo-container">
+            <img src="https://i.postimg.cc/mD8zM9f1/kg-logo.png" class="kg-logo" onerror="this.style.display='none'; this.parentElement.innerHTML='KG'">
+        </div>
+        <h2 style="margin:0; font-size:26px;">KG腳本官網</h2>
+        <p style="color:#666; font-size:12px; margin:5px 0 25px;">KG SCRIPT OFFICIAL</p>
+        <input type="password" id="auth-code" placeholder="輸入 24H 授權碼或密鑰...">
+        <button class="btn-verify" onclick="checkAuth()">驗證並進入</button>
+        <div class="contact-group" style="display:flex; gap:10px; margin-top:25px;">
+            <a href="mqqwpa://im/chat?chat_type=wpa&uin=3065395172" class="contact-btn" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); color:#fff; text-decoration:none; border-radius:50px; font-size:12px;">聯繫張碩</a>
+            <a href="mqqwpa://im/chat?chat_type=wpa&uin=2031480494" class="contact-btn" style="flex:1; padding:10px; background:rgba(255,255,255,0.05); color:#fff; text-decoration:none; border-radius:50px; font-size:12px;">聯繫雷歐</a>
         </div>
     </div>
 </div>
 
-<div id="admin-panel">
-    <h2 style="color:#00ffcc; text-align:left; padding-left:20px;">LEOREOROBLOX DASHBOARD <span style="float:right; color:#ff4444; font-size:14px;" onclick="closeAdmin()">CLOSE</span></h2>
-    <hr style="border-color:#222;">
-    <div style="padding:20px;">
-        <button class="admin-btn" style="background:#00ffcc; color:#000;">發布公告</button>
-        <button class="admin-btn" style="background:#ffbb33; color:#000;" onclick="toggleMaint()">切換維護狀態</button>
-    </div>
-</div>
-
 <script>
-    let isMaint = false;
-    let curLang = 'zh-hk';
+    function closeNotice() {
+        document.getElementById('notice-box').classList.add('hide');
+        document.getElementById('main-container').classList.add('up');
+    }
+    function toggleMenu() { document.getElementById('sidebar').classList.toggle('open'); }
+    function openPage(id) { document.getElementById(id).style.display = 'flex'; toggleMenu(); }
+    function closePage() { document.querySelectorAll('.sub-page').forEach(p => p.style.display = 'none'); }
 
-    const langData = {
-        'zh-hk': { home: "🏠 驗證主頁", lang: "🌐 語言切換", vTitle: "驗證中心", vPlaceholder: "請輸入您的授權碼", vBtn: "驗證並注入腳本", c1: "聯繫張碩", c2: "聯繫雷歐", nTitle: "kg腳本官网 | 防護系統", load: "正在加密衛星連線..." },
-        'zh-cn': { home: "🏠 验证主页", lang: "🌐 语言切换", vTitle: "验证中心", vPlaceholder: "请输入您的授权码", vBtn: "验证并注入脚本", c1: "联系张硕", c2: "联系雷欧", nTitle: "kg脚本官网 | 防护系统", load: "正在加密卫星连线..." },
-        'en': { home: "🏠 Home", lang: "🌐 Language", vTitle: "Verification", vPlaceholder: "Enter License Key", vBtn: "Verify & Inject", c1: "Contact ZS", c2: "Contact Leo", nTitle: "KG Script | Protection", load: "Encrypted connecting..." }
-    };
-
-    function openLang() { document.getElementById('lang-modal').style.display = 'flex'; toggleMenu(); }
-    function closeLang() { document.getElementById('lang-modal').style.display = 'none'; }
-    function setLang(l) {
-        curLang = l;
-        const d = langData[l];
-        document.getElementById('txt-m-home').innerText = d.home;
-        document.getElementById('txt-m-lang').innerText = d.lang;
-        document.getElementById('txt-v-title').innerText = d.vTitle;
-        document.getElementById('authKey').placeholder = d.vPlaceholder;
-        document.getElementById('txt-v-btn').innerText = d.vBtn;
-        document.getElementById('txt-c-1').innerText = d.c1;
-        document.getElementById('txt-c-2').innerText = d.c2;
-        document.getElementById('txt-n-title').innerText = d.nTitle;
-        closeLang();
+    function setLang(lang) {
+        const toast = document.getElementById('toast');
+        toast.innerText = lang === 'English' ? 'Switched' : '語言已切換';
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; closePage(); }, 1500);
     }
 
-    const quotes = ["加密連線中...", "檢測安全...", "啟動中..."];
-    let qIdx = 0;
-    const qTimer = setInterval(() => {
-        document.getElementById('load-msg').innerText = quotes[qIdx++];
-        if(qIdx >= quotes.length) {
-            clearInterval(qTimer);
-            document.getElementById('loader').style.opacity = '0';
-            setTimeout(() => document.getElementById('loader').style.display = 'none', 600);
+    function checkAuth() {
+        const val = document.getElementById('auth-code').value;
+        if(val === 'admin666') { // 管理員密鑰
+            document.getElementById('p-admin').style.display = 'flex';
+        } else {
+            alert('驗證中：授權碼無效');
         }
-    }, 1000);
+    }
 
-    function closeNotice() { document.getElementById('notice-box').style.display = 'none'; }
-    function toggleMenu() { document.getElementById('sidebar').classList.toggle('open'); }
-    function verify() { alert(curLang === 'en' ? 'Verifying...' : '正在加密驗證...'); }
-    function closeAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
-
-    let lp;
-    const trig = document.getElementById('admin-trigger');
-    trig.onmousedown = trig.ontouchstart = () => { lp = setTimeout(() => {
-        if(prompt("Admin Key:") === 'admin') document.getElementById('admin-panel').style.display = 'block';
-    }, 2000); };
-    trig.onmouseup = trig.ontouchend = () => clearTimeout(lp);
+    window.onload = () => {
+        setTimeout(() => {
+            const loader = document.getElementById('loader');
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 800);
+        }, 1200);
+    };
 </script>
-
 </body>
 </html>
