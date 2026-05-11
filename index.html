@@ -3,46 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KG System - Ultimate Admin</title>
+    <title>KG Script System - Ultimate</title>
     <style>
         :root { --main: #00ffcc; --bg: #0d0d0d; --card: #151515; --red: #ff4d4d; --gold: #ffcc00; --blue: #4d94ff; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; background: var(--bg); color: #fff; height: 100vh; overflow: hidden; }
 
-        /* 導航 */
+        /* 側邊導航 */
         .sidebar { position: fixed; left: -260px; top: 0; width: 250px; height: 100%; background: #050505; z-index: 1000; border-right: 1px solid #222; transition: 0.3s; padding-top: 60px; }
         .sidebar.open { left: 0; box-shadow: 10px 0 30px #000; }
         .menu-item { padding: 15px 20px; border-bottom: 1px solid #111; cursor: pointer; color: #aaa; font-size: 14px; }
+        .menu-item:active { background: var(--main); color: #000; }
         .menu-btn { position: fixed; top: 15px; left: 15px; font-size: 24px; z-index: 1100; cursor: pointer; color: var(--main); }
 
         .view { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
         .view.active { display: flex; z-index: 10; }
 
-        /* 卡片 */
-        .card { background: var(--card); border: 1px solid #333; border-radius: 20px; padding: 25px; width: 100%; max-width: 400px; text-align: center; max-height: 90vh; overflow-y: auto; }
-        input, select { width: 100%; padding: 12px; background: #000; border: 1px solid #444; border-radius: 10px; color: #fff; margin-bottom: 10px; text-align: center; outline: none; }
+        /* 卡片與表單 */
+        .card { background: var(--card); border: 1px solid #333; border-radius: 20px; padding: 25px; width: 100%; max-width: 400px; text-align: center; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input { width: 100%; padding: 12px; background: #000; border: 1px solid #444; border-radius: 10px; color: #fff; margin-bottom: 10px; text-align: center; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--main); }
         
-        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--main); color: #000; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--main); color: #000; font-weight: bold; cursor: pointer; margin-top: 5px; transition: 0.2s; }
+        .btn:active { transform: scale(0.96); }
         .btn-gold { background: var(--gold); color: #000; }
-        .btn-red { background: var(--red); color: #fff; padding: 5px 10px; font-size: 11px; width: auto; margin: 0; }
-        .btn-admin-gate { background: none; border: 1px solid #333; color: #555; margin-top: 15px; font-size: 11px; padding: 8px; width: 100%; }
+        .btn-red { background: var(--red); color: #fff; padding: 5px 10px; font-size: 11px; width: auto; margin: 0; border-radius: 5px; border: none; }
+
+        /* 名單樣式 */
+        .info-group { text-align: left; margin-bottom: 15px; }
+        .info-title { color: var(--main); font-size: 14px; font-weight: bold; border-left: 3px solid var(--main); padding-left: 8px; margin-bottom: 5px; }
+        .info-content { font-size: 12px; color: #ccc; margin-left: 11px; line-height: 1.6; }
+        .contrib-box { background: rgba(0,255,204,0.05); padding: 12px; border-radius: 10px; border: 1px dashed rgba(0,255,204,0.2); margin-top: 10px; }
 
         /* 管理面板樣式 */
         .list-container { text-align: left; background: #000; padding: 10px; border-radius: 10px; margin-top: 10px; font-size: 12px; border: 1px solid #222; }
         .list-item { border-bottom: 1px solid #222; padding: 10px 0; display: flex; justify-content: space-between; align-items: center; }
-        .tag { padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; }
-        .tag-key { background: var(--blue); color: white; }
-        
-        .tab-box { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 8px; font-size: 12px; background: #222; border-radius: 5px; cursor: pointer; color: #888; }
-        .tab-btn.active { background: var(--gold); color: #000; }
+        .lock-msg { color: var(--red); font-size: 11px; margin-bottom: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="menu-btn" onclick="toggleM()">☰</div>
 <div class="sidebar" id="sidebar">
-    <div class="menu-item" onclick="go('v-auth')">🏠 登入主頁</div>
+    <div class="menu-item" onclick="go('v-auth')">🏠 帳號系統</div>
+    <div class="menu-item" onclick="go('v-dev')">👥 開發者與貢獻者</div>
     <div class="menu-item" onclick="location.reload()">🔄 刷新系統</div>
 </div>
 
@@ -53,157 +57,193 @@
             <input type="text" id="l-user" placeholder="使用者名稱">
             <input type="password" id="l-pwd" placeholder="密碼">
             <button class="btn" onclick="doUserLogin()">登入腳本</button>
-            <span style="font-size:12px; color:var(--main); cursor:pointer; margin-top:15px; display:inline-block;" onclick="switchBox('box-reg')">註冊帳號</span>
-            <button class="btn-admin-gate" onclick="switchBox('box-admin-login')">⚙️ 管理員登入</button>
+            <span style="font-size:12px; color:var(--main); cursor:pointer; margin-top:15px; display:inline-block;" onclick="switchBox('box-reg')">建立新帳號</span>
+            <button class="btn" style="background:none;border:1px solid #333;color:#555;margin-top:20px;font-size:11px;" onclick="switchBox('box-admin-login')">⚙️ 管理員入口</button>
         </div>
 
         <div class="card" id="box-reg" style="display:none">
             <h2>REGISTER</h2>
-            <input type="text" id="r-user" placeholder="帳號名稱">
+            <input type="text" id="r-user" placeholder="輸入名稱">
             <input type="password" id="r-pwd" placeholder="設定密碼">
-            <button class="btn" onclick="doReg()">立即註冊</button>
+            <button class="btn" onclick="doReg()">完成註冊</button>
             <span style="font-size:12px; color:#666; cursor:pointer; margin-top:10px; display:inline-block;" onclick="switchBox('box-login')">返回登入</span>
         </div>
 
         <div class="card" id="box-admin-login" style="display:none; border-color: var(--gold);">
-            <h2 style="color:var(--gold);">ADMIN ACCESS</h2>
-            <p id="lock-notice" style="color:var(--red); font-size:11px; display:none;"></p>
+            <h2 style="color:var(--gold);">ADMIN LOGIN</h2>
+            <div id="lock-notice" class="lock-msg" style="display:none"></div>
             <input type="text" id="a-user" placeholder="管理員帳號">
             <input type="password" id="a-pwd" placeholder="管理員密碼">
-            <button class="btn btn-gold" onclick="doAdminLogin()">驗證管理員</button>
-            <button class="btn" style="background:#333;color:#888" onclick="switchBox('box-login')">返回</button>
+            <button class="btn btn-gold" onclick="doAdminLogin()">驗證身分</button>
+            <button class="btn" style="background:#222;color:#888" onclick="switchBox('box-login')">取消</button>
         </div>
 
         <div class="card" id="box-admin-panel" style="display:none; max-width:450px;">
             <h2 style="color:var(--gold);">ADMIN PANEL</h2>
-            <div class="tab-box">
-                <div class="tab-btn active" id="t-u" onclick="switchTab('u')">使用者管理</div>
-                <div class="tab-btn" id="t-k" onclick="switchTab('k')">卡密生成</div>
+            <div style="display:flex; gap:5px; margin-bottom:15px;">
+                <button class="btn btn-gold" style="font-size:12px" onclick="renderUsers()">用戶名單</button>
+                <button class="btn btn-gold" style="font-size:12px" onclick="renderKeys()">卡密生成</button>
             </div>
+            <div id="admin-display-list" class="list-container"></div>
+            <button class="btn" onclick="location.reload()" style="background:#222; margin-top:15px;">安全退出</button>
+        </div>
+    </div>
 
-            <div id="tab-users">
-                <div class="list-container" id="admin-user-list"></div>
-            </div>
-
-            <div id="tab-keys" style="display:none">
-                <div style="display:flex; gap:5px; margin-bottom:10px;">
-                    <select id="key-type" style="margin:0;"><option value="天卡">天卡</option><option value="月卡">月卡</option></select>
-                    <button class="btn btn-gold" style="margin:0; width:120px;" onclick="genKey()">生成</button>
+    <div id="v-dev" class="view">
+        <div class="card">
+            <h2 style="color:var(--main); margin-bottom:20px;">📜 開發人員資訊</h2>
+            
+            <div class="info-group">
+                <div class="info-title">脚本创作者</div>
+                <div class="info-content">
+                    總策劃：(籌備中)<br>
+                    總創作者：张硕<br>
+                    創作者：张硕<br>
+                    合作者：雷欧REO_ROBLOX
                 </div>
-                <div class="list-container" id="admin-key-list"></div>
             </div>
 
-            <button class="btn" onclick="location.reload()" style="background:#222; color:#fff; margin-top:15px;">安全退出面板</button>
+            <div class="info-group">
+                <div class="info-title">腳本相關</div>
+                <div class="info-content">腳本創作：张硕</div>
+            </div>
+
+            <div class="info-group">
+                <div class="info-title">本網站資訊</div>
+                <div class="info-content">
+                    網站總負責人：雷欧REO_ROBLOX<br>
+                    網站創作人：雷欧REO_ROBLOX<br>
+                    網站管理員：雷欧REO_ROBLOX，张硕<br>
+                    網站總設計：雷欧REO_ROBLOX<br>
+                    網站程式：雷欧REO_ROBLOX
+                </div>
+            </div>
+
+            <div class="contrib-box">
+                <div class="info-title">貢獻者</div>
+                <div class="info-content" style="color:var(--main); font-weight: bold;">
+                    雷欧REO_ROBLOX，张硕，和所有 KG 腳本使用者（大家）
+                </div>
+            </div>
+
+            <button class="btn" onclick="go('v-auth')" style="margin-top:20px;">返回登入頁面</button>
         </div>
     </div>
 </div>
 
 <script>
-    // 數據初始化
+    // 數據載入
     let users = JSON.parse(localStorage.getItem('kg_u')) || [];
     let keys = JSON.parse(localStorage.getItem('kg_k')) || [];
     let adminStats = JSON.parse(localStorage.getItem('kg_admin_stats')) || { fail: 0, lockUntil: 0, authDevice: null };
     
-    const myId = localStorage.getItem('kg_device_id') || (()=>{let i='KG-'+Math.random().toString(36).substr(2,9);localStorage.setItem('kg_device_id',i);return i;})();
+    // 裝置 ID 鎖定
+    const getMyId = () => {
+        let id = localStorage.getItem('kg_device_id');
+        if(!id) { id = 'KG-' + Math.random().toString(36).substr(2, 9); localStorage.setItem('kg_device_id', id); }
+        return id;
+    };
+    const currentId = getMyId();
 
     function checkLock() {
         if (Date.now() < adminStats.lockUntil) {
-            const h = Math.ceil((adminStats.lockUntil - Date.now()) / (1000 * 60 * 60 * 24));
-            document.getElementById('lock-notice').innerText = `封鎖中，剩餘 ${h} 天`;
-            document.getElementById('lock-notice').style.display = 'block';
+            const days = Math.ceil((adminStats.lockUntil - Date.now()) / (1000 * 60 * 60 * 24));
+            const el = document.getElementById('lock-notice');
+            el.innerText = `⚠️ 系統封鎖中，剩餘 ${days} 天`;
+            el.style.display = 'block';
             return true;
         }
         return false;
     }
 
-    // --- 使用者功能 ---
     function doUserLogin() {
         const u = document.getElementById('l-user').value, p = document.getElementById('l-pwd').value;
-        if(users.find(x => x.name === u && x.pwd === p)) alert("登入成功！");
+        if(users.find(x => x.name === u && x.pwd === p)) alert("腳本登入成功！");
         else alert("帳號或密碼錯誤");
     }
 
     function doReg() {
         const u = document.getElementById('r-user').value, p = document.getElementById('r-pwd').value;
-        if(u.length < 2 || p.length < 4) return alert("太短了");
+        if(!u || !p) return alert("請填寫完整");
         if(users.find(x => x.name === u)) return alert("帳號已存在");
         users.push({name:u, pwd:p});
         localStorage.setItem('kg_u', JSON.stringify(users));
-        alert("註冊完成！"); switchBox('box-login');
+        alert("註冊成功！"); switchBox('box-login');
     }
 
-    // --- 管理員功能 ---
     function doAdminLogin() {
         if(checkLock()) return;
         const u = document.getElementById('a-user').value, p = document.getElementById('a-pwd').value;
 
-        if(adminStats.authDevice && adminStats.authDevice !== myId) return alert("此裝置無管理權限");
+        // 裝置唯一性檢查
+        if(adminStats.authDevice && adminStats.authDevice !== currentId) return alert("錯誤：此管理員權限已綁定在其他裝置。");
 
         if(u === "admin" && p === "KGscriptWEB:admin") {
-            if(!adminStats.authDevice) adminStats.authDevice = myId;
-            adminStats.fail = 0; saveAdmin();
-            alert("管理員登入成功！"); switchBox('box-admin-panel');
+            adminStats.authDevice = currentId;
+            adminStats.fail = 0;
+            saveAdmin();
+            alert("管理員授權通過！");
+            switchBox('box-admin-panel');
         } else {
             adminStats.fail++;
             if(adminStats.fail >= 2) {
                 adminStats.lockUntil = Date.now() + (30*24*60*60*1000);
-                users = []; keys = []; // 清空數據
-                localStorage.removeItem('kg_u'); localStorage.removeItem('kg_k');
-                saveAdmin(); alert("兩次錯誤！數據已抹除且裝置封鎖 30 天");
+                // 懲罰機制：清空數據
+                users = []; keys = []; localStorage.clear();
+                saveAdmin();
+                alert("危險：管理員密碼錯誤兩次！數據已抹除，系統封鎖 30 天。");
                 location.reload();
             } else {
-                saveAdmin(); alert("密碼錯誤！剩餘 1 次機會");
+                saveAdmin();
+                alert(`密碼錯誤！剩餘 1 次機會，否則數據將被銷毀。`);
             }
         }
     }
 
-    function genKey() {
-        const type = document.getElementById('key-type').value;
-        const key = 'KG-' + Math.random().toString(36).substr(2, 8).toUpperCase();
-        keys.push({key, type, status: '未使用'});
-        localStorage.setItem('kg_k', JSON.stringify(keys));
-        renderKeys();
-    }
-
-    function delUser(idx) { if(confirm("確定刪除此使用者？")) { users.splice(idx,1); localStorage.setItem('kg_u', JSON.stringify(users)); renderUsers(); }}
-    function delKey(idx) { keys.splice(idx,1); localStorage.setItem('kg_k', JSON.stringify(keys)); renderKeys(); }
-
-    // --- UI 渲染 ---
+    // 管理員功能渲染
     function renderUsers() {
-        const div = document.getElementById('admin-user-list');
+        const div = document.getElementById('admin-display-list');
         div.innerHTML = users.length ? users.map((u, i) => `
             <div class="list-item">
-                <span>👤 <b>${u.name}</b><br><small style="color:#666">密碼: ${u.pwd}</small></span>
-                <button class="btn-red" onclick="delUser(${i})">刪除</button>
+                <span><b>${u.name}</b><br><small style="color:#666">密碼: ${u.pwd}</small></span>
+                <button class="btn-red" onclick="delU(${i})">刪除</button>
             </div>
-        `).join('') : "<center>無使用者資料</center>";
+        `).join('') : "<center>無註冊用戶</center>";
     }
 
     function renderKeys() {
-        const div = document.getElementById('admin-key-list');
-        div.innerHTML = keys.length ? keys.map((k, i) => `
+        const div = document.getElementById('admin-display-list');
+        div.innerHTML = `<button class="btn btn-gold" onclick="genK()">+ 生成隨機卡密</button>` + 
+        (keys.length ? keys.map((k, i) => `
             <div class="list-item">
-                <span><b class="tag tag-key">${k.type}</b> <code>${k.key}</code></span>
-                <button class="btn-red" onclick="delKey(${i})">作廢</button>
+                <span><code>${k.key}</code></span>
+                <button class="btn-red" onclick="delK(${i})">作廢</button>
             </div>
-        `).join('') : "<center>尚未生成卡密</center>";
+        `).join('') : "");
     }
 
+    function genK() {
+        keys.push({key: 'KG-'+Math.random().toString(36).substr(2,8).toUpperCase()});
+        localStorage.setItem('kg_k', JSON.stringify(keys)); renderKeys();
+    }
+    function delU(i) { users.splice(i,1); localStorage.setItem('kg_u', JSON.stringify(users)); renderUsers(); }
+    function delK(i) { keys.splice(i,1); localStorage.setItem('kg_k', JSON.stringify(keys)); renderKeys(); }
+
+    // UI 切換
     function switchBox(id) {
         ['box-login','box-reg','box-admin-login','box-admin-panel'].forEach(b => document.getElementById(b).style.display='none');
         document.getElementById(id).style.display='block';
-        if(id === 'box-admin-panel') { renderUsers(); renderKeys(); }
+        if(id === 'box-admin-panel') renderUsers();
     }
 
-    function switchTab(t) {
-        document.getElementById('tab-users').style.display = t === 'u' ? 'block' : 'none';
-        document.getElementById('tab-keys').style.display = t === 'k' ? 'block' : 'none';
-        document.getElementById('t-u').classList.toggle('active', t === 'u');
-        document.getElementById('t-k').classList.toggle('active', t === 'k');
+    function go(id) {
+        document.getElementById('v-auth').classList.remove('active');
+        document.getElementById('v-dev').classList.remove('active');
+        document.getElementById(id).classList.add('active');
+        toggleM(false);
     }
 
     function saveAdmin() { localStorage.setItem('kg_admin_stats', JSON.stringify(adminStats)); }
-    function go(id) { switchBox('box-login'); toggleM(false); }
     function toggleM(f) { document.getElementById('sidebar').classList.toggle('open', f); }
 
     window.onload = checkLock;
