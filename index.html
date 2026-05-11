@@ -106,83 +106,120 @@
 </nav>
 
 <script>
-    // 1. 隨機開機語錄 (提議 3)
+    // 1. 隨機開機語錄 (增加 LeoReoRoblox 專屬訊號)
     const quotes = ["正在加密衛星連線...", "檢測到 LeoReoRoblox 訊號...", "KG 核心組件載入中...", "正在優化腳本環境...", "張碩 & 雷歐 竭誠服務"];
     let qIdx = 0;
     const qTimer = setInterval(() => {
-        document.getElementById('load-msg').innerText = quotes[qIdx++];
+        const msgEl = document.getElementById('load-msg');
+        if(msgEl) msgEl.innerText = quotes[qIdx++];
         if(qIdx >= quotes.length) {
             clearInterval(qTimer);
-            document.getElementById('loader').style.opacity = '0';
+            const loader = document.getElementById('loader');
+            if(loader) loader.style.opacity = '0';
             setTimeout(() => {
-                document.getElementById('loader').style.display = 'none';
+                if(loader) loader.style.display = 'none';
                 if(localStorage.getItem('isKGAdmin') === 'true') openAdmin();
             }, 1000);
         }
     }, 1000);
 
-    // 2. 雲端同步系統 (提議 1) - 預留介面
+    // --- 【天網雲端同步核心】 ---
+    const GIST_RAW_URL = "https://gist.github.com/cyc123456mo-debug/89a66e79e5a6b9228dd4e080ef09bafe/raw/6c1a6dfe0c8cea30c30018fc6fc358cb14aa1e0e/kg";
+
     async function syncCloud() {
-        // 此處未來可更換為真正的 GitHub Gist 網址
-        console.log("正在監控雲端指令...");
+        try {
+            const proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(GIST_RAW_URL);
+            const response = await fetch(proxy);
+            const data = await response.json();
+            
+            if (data.contents) {
+                const cloudContent = data.contents.trim();
+                const noticeEl = document.getElementById('cloud-notice');
+                const noticeBar = document.getElementById('notice-bar');
+                const maintOverlay = document.getElementById('maint-overlay');
+                
+                if(noticeEl) noticeEl.innerText = cloudContent;
+                
+                if(cloudContent.includes("MAINT:ON")) {
+                    isMaint = true;
+                    if(maintOverlay) maintOverlay.style.display = 'block';
+                    if(noticeBar) noticeBar.style.background = 'rgba(255,0,0,0.3)';
+                } else {
+                    isMaint = false;
+                    if(maintOverlay) maintOverlay.style.display = 'none';
+                    if(noticeBar) noticeBar.style.background = 'rgba(0,255,204,0.15)';
+                }
+            }
+        } catch (e) {
+            const noticeEl = document.getElementById('cloud-notice');
+            if(noticeEl) noticeEl.innerText = "📡 正在監控衛星訊號...";
+        }
     }
     syncCloud();
+    setInterval(syncCloud, 60000);
 
-    // 3. 管理員與偽裝邏輯 (提議 2)
+    // 2. 管理員驗證與偽裝防護
     let failCount = 0;
     let longPress;
+    let isMaint = false;
     const trigger = document.getElementById('admin-trigger');
-    trigger.onmousedown = trigger.ontouchstart = () => { longPress = setTimeout(showLogin, 2000); };
-    trigger.onmouseup = trigger.ontouchend = () => { clearTimeout(longPress); };
+    if(trigger) {
+        trigger.onmousedown = trigger.ontouchstart = () => { longPress = setTimeout(showLogin, 2000); };
+        trigger.onmouseup = trigger.ontouchend = () => { clearTimeout(longPress); };
+    }
 
     function showLogin() {
+        const loginEl = document.getElementById('admin-login');
         if(localStorage.getItem('isKGAdmin') === 'true') { openAdmin(); }
-        else { document.getElementById('admin-login').style.display = 'flex'; }
+        else { if(loginEl) loginEl.style.display = 'flex'; }
     }
-    function closeLogin() { document.getElementById('admin-login').style.display = 'none'; }
+    function closeLogin() { 
+        const loginEl = document.getElementById('admin-login');
+        if(loginEl) loginEl.style.display = 'none'; 
+    }
 
     function checkAuth() {
         const u = document.getElementById('adm-user').value;
         const p = document.getElementById('adm-pass').value;
+        const loginBox = document.getElementById('login-box');
         if(u === 'LeoReoRoblox' && p === 'KGscriptWEB:admin') {
             localStorage.setItem('isKGAdmin', 'true');
             closeLogin(); openAdmin();
         } else {
             failCount++;
             if(failCount >= 3) {
-                document.getElementById('login-box').innerHTML = "<h3 style='color:red'>連接超時</h3><p>由於多次嘗試失敗，資料庫已鎖定。</p>";
-                setTimeout(() => location.reload(), 3000); // 偽裝成報錯 (提議 2)
+                if(loginBox) loginBox.innerHTML = "<h3 style='color:red'>連接超時</h3><p>由於多次嘗試失敗，資料庫已鎖定。</p>";
+                setTimeout(() => location.reload(), 3000);
             } else { alert('身分驗證失敗'); }
         }
     }
 
-    function openAdmin() { document.getElementById('admin-panel').style.display = 'block'; }
-    function exitAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
+    function openAdmin() { 
+        const panel = document.getElementById('admin-panel');
+        if(panel) panel.style.display = 'block'; 
+    }
+    function exitAdmin() { 
+        const panel = document.getElementById('admin-panel');
+        if(panel) panel.style.display = 'none'; 
+    }
     function forgetMe() { localStorage.removeItem('isKGAdmin'); location.reload(); }
 
-    // 4. 背景粒子與基礎導航
-    const cv = document.getElementById('canvas'); const ct = cv.getContext('2d'); let ps = [];
-    function rs() { cv.width = window.innerWidth; cv.height = window.innerHeight; } window.onresize = rs; rs();
-    for(let i=0; i<30; i++) ps.push({x:Math.random()*cv.width, y:Math.random()*cv.height, s:Math.random()+0.3});
-    function lp() { ct.clearRect(0,0,cv.width,cv.height); ct.fillStyle = '#00ffcc22'; ps.forEach(p=>{p.y-=p.s; if(p.y<0)p.y=cv.height; ct.beginPath(); ct.arc(p.x,p.y,1,0,Math.PI*2); ct.fill();}); requestAnimationFrame(lp); } lp();
-
-    function updateNoticeLocal() {
-        const t = document.getElementById('adm-cmd').value;
-        if(t) document.getElementById('cloud-notice').innerText = t;
-    }
-
-    let isMaint = false;
-    function toggleMaint() {
-        isMaint = !isMaint;
-        document.getElementById('maint-overlay').style.display = isMaint ? 'block' : 'none';
-        document.getElementById('notice-bar').style.background = isMaint ? 'rgba(255,0,0,0.2)' : 'rgba(0,255,204,0.15)';
+    // 3. 背景與介面控制
+    const cv = document.getElementById('canvas'); 
+    if(cv) {
+        const ct = cv.getContext('2d'); let ps = [];
+        function rs() { cv.width = window.innerWidth; cv.height = window.innerHeight; } window.onresize = rs; rs();
+        for(let i=0; i<30; i++) ps.push({x:Math.random()*cv.width, y:Math.random()*cv.height, s:Math.random()+0.3});
+        function lp() { ct.clearRect(0,0,cv.width,cv.height); ct.fillStyle = '#00ffcc22'; ps.forEach(p=>{p.y-=p.s; if(p.y<0)p.y=cv.height; ct.beginPath(); ct.arc(p.x,p.y,1,0,Math.PI*2); ct.fill();}); requestAnimationFrame(lp); } lp();
     }
 
     function nav(p, i) {
         document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
-        document.getElementById('pg-'+p).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.querySelectorAll('.nav-item')[i].classList.add('active');
+        const targetPage = document.getElementById('pg-'+p);
+        if(targetPage) targetPage.classList.add('active');
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(n => n.classList.remove('active'));
+        if(navItems[i]) navItems[i].classList.add('active');
     }
 
     function verify() {
@@ -190,5 +227,6 @@
         else alert('正在加密驗證...');
     }
 </script>
+
 </body>
 </html>
