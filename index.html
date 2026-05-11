@@ -3,296 +3,268 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KG Script - Ultimate System</title>
+    <title>KG Script - Admin Control v2.0</title>
     <style>
         :root {
-            --bg: #000000;
-            --card-bg: #111111;
-            --border: #222222;
-            --main: #00ffcc; 
-            --gold: #ffcc00;
-            --text: #ffffff;
-            --text-sub: #aaaaaa;
-            --red: #ff4d4d;
-            --green: #00cc66;
+            --bg: #000; --card: #0d0d0d; --border: #1a1a1a;
+            --main: #00ffcc; --gold: #ffcc00; --red: #ff3333; --green: #00ff88;
+            --text: #fff; --sub: #666;
         }
 
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background-color: var(--bg); color: var(--text); height: 100vh; overflow: hidden; font-size: 14px; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
 
-        /* 輸入框與按鈕 */
-        input { width: 100%; padding: 14px; background: #000; border: 1px solid var(--border); border-radius: 10px; color: var(--text); margin-bottom: 12px; outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--main); }
+        /* 加載動畫 */
+        #loader { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; justify-content: center; align-items: center; transition: 0.5s; }
+        .spinner { width: 35px; height: 35px; border: 3px solid rgba(0,255,204,0.1); border-top: 3px solid var(--main); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* 導航 */
+        .sidebar { position: fixed; left: -270px; top: 0; width: 260px; height: 100%; background: #050505; z-index: 2000; border-right: 1px solid var(--border); transition: 0.3s; padding: 70px 20px; }
+        .sidebar.open { left: 0; }
+        .menu-btn { position: fixed; top: 15px; left: 15px; z-index: 2100; cursor: pointer; background: #111; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid var(--border); }
+
+        .view { position: absolute; inset: 0; display: none; padding: 20px; padding-top: 80px; overflow-y: auto; animation: fadeIn 0.4s ease; }
+        .view.active { display: flex; flex-direction: column; z-index: 10; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; margin-bottom: 16px; width: 100%; max-width: 420px; margin-left: auto; margin-right: auto; }
         
-        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
-        .btn:active { transform: scale(0.98); opacity: 0.8; }
-        .btn-main { background-color: var(--main); color: #000; }
-        .btn-gold { background-color: var(--gold); color: #000; }
-        .btn-dark { background-color: #222; color: var(--text-sub); }
-        .btn-red { background-color: var(--red); color: white; width: auto; padding: 6px 12px; font-size: 12px; }
+        /* 鎖定介面 */
+        #lock-overlay { position: fixed; inset: 0; background: #000; z-index: 9000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px; }
 
-        /* 導航選單 */
-        .sidebar { position: fixed; left: -270px; top: 0; width: 260px; height: 100%; background: #080808; z-index: 2000; border-right: 1px solid var(--border); transition: 0.3s; padding: 60px 20px; }
-        .sidebar.open { left: 0; box-shadow: 10px 0 30px #000; }
-        .menu-item { padding: 16px; border-radius: 10px; color: var(--text-sub); cursor: pointer; margin-bottom: 8px; font-size: 14px; }
-        .menu-item.active { background: rgba(0,255,204,0.1); color: var(--main); font-weight: bold; }
-        .menu-btn { position: fixed; top: 15px; left: 15px; font-size: 24px; z-index: 2100; cursor: pointer; color: var(--text); background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 8px; }
+        /* 管理員看板 */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-card { background: #111; border: 1px solid var(--border); padding: 12px; border-radius: 15px; }
+        .stat-val { font-size: 18px; color: var(--main); font-weight: bold; }
+        .stat-lab { font-size: 10px; color: var(--sub); display: block; }
 
-        /* 介面容器 */
-        .view { position: absolute; inset: 0; display: none; flex-direction: column; padding: 20px; padding-top: 80px; overflow-y: auto; }
-        .view.active { display: flex; z-index: 10; }
-        .card-wrap { width: 100%; max-width: 400px; margin: 0 auto; }
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 25px; margin-bottom: 15px; }
+        input, textarea { width: 100%; padding: 14px; background: #000; border: 1px solid var(--border); border-radius: 12px; color: #fff; margin-bottom: 10px; outline: none; transition: 0.3s; }
+        textarea { height: 80px; resize: none; font-size: 13px; }
+        input:focus, textarea:focus { border-color: var(--main); }
         
-        /* 使用者資訊條 */
-        .user-bar { display: flex; align-items: center; gap: 15px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 15px 20px; margin-bottom: 15px; }
-        .avatar { width: 48px; height: 48px; background: #1a1a1a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--main); border: 1px solid var(--border); }
-        .status-tag { font-size: 10px; padding: 2px 8px; border-radius: 5px; margin-top: 4px; display: inline-block; }
-        .tag-on { background: rgba(0,204,102,0.1); color: var(--green); }
-        .tag-off { background: rgba(255,77,77,0.1); color: var(--red); }
+        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-main { background: var(--main); color: #000; }
+        .btn-gold { background: var(--gold); color: #000; }
+        .btn-dark { background: #1a1a1a; color: #888; }
+        .btn-red { background: rgba(255,51,51,0.1); color: var(--red); border: 1px solid var(--red); font-size: 12px; width: auto; padding: 5px 12px; }
 
-        /* 列表樣式 */
-        .list-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-top: 10px; }
-        .list-item { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .list-item:last-child { border-bottom: none; }
-        .item-title { font-family: monospace; font-size: 14px; }
-        .item-info { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
-
-        /* 公告與警告 */
-        .notice { background: rgba(255,204,0,0.05); border: 1px solid rgba(255,204,0,0.1); border-radius: 10px; padding: 12px; color: var(--gold); font-size: 12px; margin-bottom: 15px; }
-        .lock-banner { color: var(--red); background: rgba(255,77,77,0.1); border: 1px solid var(--red); padding: 12px; border-radius: 10px; font-weight: bold; margin-bottom: 15px; text-align: center; }
-
-        /* 腳本顯示 */
-        .script-box { background: #000; border: 1px dashed var(--main); padding: 15px; color: #0f0; font-family: monospace; font-size: 12px; border-radius: 10px; white-space: pre-wrap; margin: 15px 0; }
+        .notice-box { background: rgba(255,204,0,0.05); border: 1px solid rgba(255,204,0,0.1); padding: 15px; border-radius: 15px; color: var(--gold); font-size: 13px; margin-bottom: 15px; line-height: 1.6; }
     </style>
 </head>
 <body>
 
+<div id="loader"><div class="spinner"></div></div>
+
+<div id="lock-overlay">
+    <h1 style="color:var(--red); font-size: 40px; margin-bottom: 10px;">⚠️</h1>
+    <h2 style="margin: 0;">系統維護中</h2>
+    <p style="color:var(--sub); font-size: 14px; margin-top: 10px;">網站已被管理員暫時鎖定，請稍後再試。</p>
+    <button class="btn btn-dark" style="width: auto; margin-top: 20px;" onclick="switchBox('box-admin-login'); document.getElementById('lock-overlay').style.display='none';">管理員登入</button>
+</div>
+
 <div class="menu-btn" onclick="toggleM()">☰</div>
 <div class="sidebar" id="sidebar">
-    <div class="menu-item active" id="m-auth" onclick="go('v-auth')">🔑 帳號系統</div>
-    <div class="menu-item" id="m-dev" onclick="go('v-dev')">👥 開發者名單</div>
-    <div class="menu-item" onclick="location.reload()">🔄 刷新系統</div>
+    <div class="menu-item active" onclick="go('v-auth')">主頁系統</div>
+    <div class="menu-item" onclick="go('v-dev')">團隊資訊</div>
+    <div class="menu-item" onclick="location.reload()">重新整理</div>
 </div>
 
 <div id="app-container">
     <div id="v-auth" class="view active">
-        <div class="card-wrap">
+        
+        <div id="box-login" class="card">
+            <h2 style="margin:0 0 5px 0;">KG LOGIN</h2>
+            <p style="color:var(--sub); font-size:12px; margin-bottom:20px;">請登入以使用腳本服務</p>
+            <input type="text" id="l-user" placeholder="用戶名稱">
+            <input type="password" id="l-pwd" placeholder="帳戶密碼">
+            <button class="btn btn-main" onclick="withLoad(doUserLogin)">登入</button>
+            <p style="text-align:center; font-size:12px; margin-top:15px;">沒有帳號？ <span style="color:var(--main)" onclick="switchBox('box-reg')">立即註冊</span></p>
+            <button class="btn btn-dark" style="margin-top:10px; font-size:11px;" onclick="switchBox('box-admin-login')">⚙️ 後台入口</button>
+        </div>
+
+        <div id="box-reg" class="card" style="display:none">
+            <h2>帳號註冊</h2>
+            <input type="text" id="r-user" placeholder="輸入名稱">
+            <input type="password" id="r-pwd" placeholder="設定密碼">
+            <button class="btn btn-main" onclick="withLoad(doReg)">提交註冊</button>
+            <p style="text-align:center; font-size:12px; margin-top:10px; color:var(--sub)" onclick="switchBox('box-login')">返回登入</p>
+        </div>
+
+        <div id="box-user-panel" style="display:none; width:100%; max-width:420px; margin:0 auto;">
+            <div class="card" style="padding:15px; display:flex; align-items:center; gap:15px;">
+                <div style="background:#1a1a1a; width:45px; height:45px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:var(--main); font-weight:bold;" id="u-avatar">?</div>
+                <div><div id="u-name" style="font-weight:bold;">User</div><div id="u-status" style="font-size:11px;">讀取中...</div></div>
+            </div>
             
-            <div class="card" id="box-login">
-                <h2 style="margin:0 0 5px 0;">登入</h2>
-                <p style="color:var(--text-sub); font-size:12px; margin-bottom:20px;">請登入您的帳號以進行驗證</p>
-                <input type="text" id="l-user" placeholder="用戶名">
-                <input type="password" id="l-pwd" placeholder="密碼">
-                <button class="btn btn-main" onclick="doUserLogin()">登入腳本系統</button>
-                <p style="text-align:center; font-size:12px; margin-top:20px;">
-                    沒有帳號？ <span style="color:var(--main); cursor:pointer;" onclick="switchBox('box-reg')">立即註冊</span>
-                </p>
-                <button class="btn-dark btn" style="font-size:11px; margin-top:15px;" onclick="switchBox('box-admin-login')">⚙️ 管理員入口</button>
-            </div>
+            <div class="notice-box" id="user-notice-display">讀取公告中...</div>
 
-            <div class="card" id="box-reg" style="display:none">
-                <h2>註冊</h2>
-                <input type="text" id="r-user" placeholder="設定用戶名">
-                <input type="password" id="r-pwd" placeholder="設定密碼">
-                <button class="btn btn-main" onclick="doReg()">完成註冊</button>
-                <p style="text-align:center; font-size:12px; margin-top:15px; color:var(--text-sub); cursor:pointer;" onclick="switchBox('box-login')">返回登入</p>
+            <div id="p-active" class="card">
+                <input type="text" id="active-key" placeholder="輸入激活碼 (KG-XXXX)">
+                <button class="btn btn-main" onclick="withLoad(doActiveKey)">激活授權</button>
             </div>
-
-            <div id="box-user-panel" style="display:none">
-                <div class="user-bar">
-                    <div class="avatar" id="u-avatar">?</div>
-                    <div style="flex:1">
-                        <div id="u-name" style="font-weight:bold; font-size:16px;">User</div>
-                        <div id="u-tag" class="status-tag tag-off">未激活</div>
-                    </div>
-                </div>
-                <div class="notice">
-                    <b>系統公告：</b><br>請輸入有效的卡密進行激活，激活後可解鎖專屬腳本。
-                </div>
-                <div class="card" id="p-active">
-                    <input type="text" id="active-key" placeholder="輸入卡密 (KG-XXXXXX)">
-                    <button class="btn btn-main" onclick="doActiveKey()">激活帳號</button>
-                    <button class="btn-dark btn" style="margin-top:10px;" onclick="location.reload()">登出</button>
-                </div>
-                <div class="card" id="p-script" style="display:none; border-color:var(--green);">
-                    <h3 style="color:var(--green); margin-top:0;">腳本已解鎖</h3>
-                    <div class="script-box" id="script-content"></div>
-                    <button class="btn btn-main" onclick="copyScript()">複製腳本代碼</button>
-                    <button class="btn-dark btn" style="margin-top:10px;" onclick="location.reload()">安全登出</button>
-                </div>
+            <div id="p-script" class="card" style="display:none; border-color:var(--main)">
+                <h3 style="color:var(--main); margin-top:0;">腳本內容</h3>
+                <div style="background:#000; padding:12px; border-radius:10px; color:#0f0; font-family:monospace; font-size:12px; border:1px dashed var(--main); margin-bottom:15px;" id="script-content"></div>
+                <button class="btn btn-main" onclick="copyScript()">複製腳本</button>
             </div>
-
-            <div class="card" id="box-admin-login" style="display:none; border-color:var(--gold);">
-                <h2 style="color:var(--gold); margin-top:0;">管理員驗證</h2>
-                <div id="lock-notice" class="lock-banner" style="display:none"></div>
-                <input type="text" id="a-user" placeholder="管理員帳號">
-                <input type="password" id="a-pwd" placeholder="管理員密碼">
-                <button class="btn btn-gold" onclick="doAdminLogin()">進入後台</button>
-                <p style="text-align:center; font-size:11px; color:#555; margin-top:15px;" onclick="switchBox('box-login')">返回</p>
-            </div>
-
-            <div id="box-admin-panel" style="display:none">
-                <div class="card" style="border-color:var(--gold);">
-                    <h2 style="color:var(--gold); margin-top:0;">控制中心</h2>
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn btn-gold" style="flex:1; font-size:12px;" onclick="renderKeys()">卡密管理</button>
-                        <button class="btn btn-gold" style="flex:1; font-size:12px;" onclick="renderUsers()">用戶清單</button>
-                    </div>
-                </div>
-                <div style="font-weight:bold; margin:20px 0 10px 5px;" id="list-title">名單管理</div>
-                <div class="list-box" id="admin-list"></div>
-                <button class="btn-dark btn" style="margin-top:20px;" onclick="location.reload()">退出後台</button>
-            </div>
-
+            <button class="btn btn-dark" style="max-width:420px; margin:0 auto;" onclick="location.reload()">安全登出</button>
         </div>
+
+        <div id="box-admin-login" class="card" style="display:none; border-color:var(--gold);">
+            <h2 style="color:var(--gold); margin-top:0;">ADMIN ACCESS</h2>
+            <input type="text" id="a-user" placeholder="管理員帳號">
+            <input type="password" id="a-pwd" placeholder="管理員密碼">
+            <button class="btn btn-gold" onclick="withLoad(doAdminLogin)">登入管理系統</button>
+            <button class="btn btn-dark" style="margin-top:10px;" onclick="location.reload()">返回</button>
+        </div>
+
+        <div id="box-admin-panel" style="display:none; width:100%; max-width:420px; margin:0 auto;">
+            <div class="stats-grid">
+                <div class="stat-card"><span class="stat-lab">訪問量</span><span class="stat-val" id="st-v">0</span></div>
+                <div class="stat-card"><span class="stat-lab">註冊數</span><span class="stat-val" id="st-u">0</span></div>
+            </div>
+            
+            <div class="card" style="border-color:var(--gold);">
+                <h3 style="margin-top:0; color:var(--gold);">系統控制</h3>
+                <textarea id="admin-notice-input" placeholder="在此輸入要發佈的系統公告..."></textarea>
+                <button class="btn btn-gold" style="font-size:12px; margin-bottom:15px;" onclick="updateNotice()">更新全站公告</button>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:12px; border-radius:10px;">
+                    <span style="font-size:13px; font-weight:bold;">鎖定網站 (維護模式)</span>
+                    <button id="lock-btn" class="btn" style="width:80px; padding:8px; font-size:12px;" onclick="toggleSiteLock()"></button>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <button class="btn btn-dark" style="flex:1" onclick="renderKeys()">卡密管理</button>
+                <button class="btn btn-dark" style="flex:1" onclick="renderUsers()">用戶名單</button>
+            </div>
+            <div id="admin-list"></div>
+        </div>
+
     </div>
 
-    <div id="v-dev" class="view">
-        <div class="card-wrap">
-            <div class="card">
-                <h2 style="color:var(--main); margin-top:0;">👥 開發與貢獻</h2>
-                <div style="font-size:13px; line-height:1.8;">
-                    <b style="color:var(--main)">腳本團隊：</b><br>
-                    總創作者：張碩<br>
-                    合作者：雷歐REO_ROBLOX<br><br>
-                    <b style="color:var(--main)">技術與設計：</b><br>
-                    網站開發：雷歐REO_ROBLOX<br>
-                    管理員：雷歐REO_ROBLOX、張碩<br><br>
-                    <b style="color:var(--main)">特別鳴謝：</b><br>
-                    全體 KG 腳本使用者
-                </div>
-                <button class="btn btn-main" style="margin-top:25px;" onclick="go('v-auth')">返回首頁</button>
-            </div>
-        </div>
-    </div>
+    <div id="v-dev" class="view"><div class="card"><h2>關於團隊</h2><p>KG Script v2.0 - 專業卡密授權系統</p><button class="btn btn-main" onclick="go('v-auth')">返回</button></div></div>
 </div>
 
 <script>
-    // 系統變數
+    // 核心數據
     let users = JSON.parse(localStorage.getItem('kg_u')) || [];
     let keys = JSON.parse(localStorage.getItem('kg_k')) || [];
     let adminStats = JSON.parse(localStorage.getItem('kg_admin_stats')) || { fail: 0, lockUntil: 0, authDevice: null };
+    let sysConfig = JSON.parse(localStorage.getItem('kg_config')) || { isLocked: false, notice: "歡迎使用 KG Script 腳本驗證系統！" };
+    let siteStats = JSON.parse(localStorage.getItem('kg_site_stats')) || { visits: 0 };
     let curU = null;
+    const myId = localStorage.getItem('kg_device_id') || (()=>{let i='KG-'+Math.random().toString(36).substr(2,7).toUpperCase();localStorage.setItem('kg_device_id',i);return i;})();
 
-    // 取得手機唯一 ID
-    const myId = localStorage.getItem('kg_device_id') || (()=>{let i='KG-'+Math.random().toString(36).substr(2,9).toUpperCase();localStorage.setItem('kg_device_id',i);return i;})();
-    localStorage.setItem('kg_device_id', myId);
-
-    // 檢查封鎖狀態
-    function checkLock() {
-        if (Date.now() < adminStats.lockUntil) {
-            const days = Math.ceil((adminStats.lockUntil - Date.now()) / (1000 * 60 * 60 * 24));
-            document.getElementById('lock-notice').innerText = `系統鎖定中，剩餘 ${days} 天`;
-            document.getElementById('lock-notice').style.display = 'block';
-            return true;
-        }
-        return false;
+    // 初始化狀態
+    function init() {
+        if (!sessionStorage.getItem('v')) { siteStats.visits++; localStorage.setItem('kg_site_stats', JSON.stringify(siteStats)); sessionStorage.setItem('v','1'); }
+        if (sysConfig.isLocked) document.getElementById('lock-overlay').style.display = 'flex';
+        document.getElementById('user-notice-display').innerText = sysConfig.notice;
+        document.getElementById('admin-notice-input').value = sysConfig.notice;
+        updateLockBtn();
     }
 
-    // --- 使用者功能 ---
+    // 加載控制
+    function withLoad(fn) {
+        document.getElementById('loader').style.display='flex'; document.getElementById('loader').style.opacity='1';
+        setTimeout(() => { fn(); document.getElementById('loader').style.opacity='0'; setTimeout(()=>document.getElementById('loader').style.display='none',400); }, 600);
+    }
+
+    // 管理員核心功能
+    function updateNotice() {
+        sysConfig.notice = document.getElementById('admin-notice-input').value;
+        localStorage.setItem('kg_config', JSON.stringify(sysConfig));
+        alert("公告已即時更新！");
+    }
+
+    function toggleSiteLock() {
+        sysConfig.isLocked = !sysConfig.isLocked;
+        localStorage.setItem('kg_config', JSON.stringify(sysConfig));
+        updateLockBtn();
+        alert(sysConfig.isLocked ? "網站已鎖定，使用者無法進入。" : "網站已解鎖。");
+    }
+
+    function updateLockBtn() {
+        const btn = document.getElementById('lock-btn');
+        btn.innerText = sysConfig.isLocked ? "已鎖定" : "未鎖定";
+        btn.className = sysConfig.isLocked ? "btn btn-main" : "btn btn-dark";
+    }
+
+    // 帳號邏輯
     function doUserLogin() {
+        if(sysConfig.isLocked) return alert("網站維護中，暫時無法登入。");
         const u = document.getElementById('l-user').value, p = document.getElementById('l-pwd').value;
         const found = users.find(x => x.name === u && x.pwd === p);
-        if(found) {
-            curU = found; updateUserPanel(); switchBox('box-user-panel');
-        } else alert("帳號或密碼錯誤");
+        if(found) { curU = found; updateUserPanel(); switchBox('box-user-panel'); }
+        else alert("登入失敗");
     }
 
     function doReg() {
         const u = document.getElementById('r-user').value, p = document.getElementById('r-pwd').value;
-        if(!u || !p) return alert("資訊不完整");
-        if(users.find(x => x.name === u)) return alert("帳號已存在");
+        if(!u || !p) return;
+        if(users.find(x => x.name === u)) return alert("帳號重複");
         users.push({name:u, pwd:p, active: false});
         localStorage.setItem('kg_u', JSON.stringify(users));
-        alert("註冊成功！"); switchBox('box-login');
+        alert("註冊成功"); switchBox('box-login');
     }
 
     function doActiveKey() {
-        const input = document.getElementById('active-key').value.trim();
-        const kIdx = keys.findIndex(k => k.key === input);
+        const val = document.getElementById('active-key').value.trim();
+        const kIdx = keys.findIndex(k => k.key === val);
         if(kIdx !== -1) {
             keys.splice(kIdx, 1); localStorage.setItem('kg_k', JSON.stringify(keys));
             curU.active = true; localStorage.setItem('kg_u', JSON.stringify(users));
-            updateUserPanel(); alert("激活成功！腳本已發放。");
-        } else alert("無效的卡密");
+            updateUserPanel(); alert("激活成功！");
+        } else alert("卡密無效");
     }
 
     function updateUserPanel() {
         document.getElementById('u-avatar').innerText = curU.name[0].toUpperCase();
         document.getElementById('u-name').innerText = curU.name;
-        const tag = document.getElementById('u-tag');
-        if(curU.active) {
-            tag.innerText = "已激活授權"; tag.className = "status-tag tag-on";
-            document.getElementById('p-active').style.display = "none";
-            document.getElementById('p-script').style.display = "block";
-            document.getElementById('script-content').innerText = `-- KG Script 授權代碼\nprint("KG腳本啟動中...")\n-- [請在此處貼上您的腳本內容]`;
-        } else {
-            tag.innerText = "未激活帳號"; tag.className = "status-tag tag-off";
-        }
+        document.getElementById('u-status').innerText = curU.active ? "● 已激活授權" : "○ 尚未激活";
+        document.getElementById('u-status').style.color = curU.active ? "var(--green)" : "var(--red)";
+        document.getElementById('p-active').style.display = curU.active ? "none" : "block";
+        document.getElementById('p-script').style.display = curU.active ? "block" : "none";
+        document.getElementById('script-content').innerText = `-- KG Script\nprint("腳本載入成功")`;
     }
 
-    function copyScript() {
-        navigator.clipboard.writeText(document.getElementById('script-content').innerText);
-        alert("代碼已複製");
-    }
-
-    // --- 管理員核心 ---
     function doAdminLogin() {
-        if(checkLock()) return;
         const u = document.getElementById('a-user').value, p = document.getElementById('a-pwd').value;
-
-        if(adminStats.authDevice && adminStats.authDevice !== myId) return alert("❌ 此裝置未獲得授權");
-
         if(u === "admin" && p === "KGscriptWEB:admin") {
-            if(!adminStats.authDevice) adminStats.authDevice = myId;
-            adminStats.fail = 0; saveAdmin();
-            alert("管理員登入成功"); switchBox('box-admin-panel');
-        } else {
-            adminStats.fail++;
-            if(adminStats.fail >= 2) {
-                adminStats.lockUntil = Date.now() + (30*24*60*60*1000);
-                users = []; keys = []; localStorage.clear(); // 毀滅性清空
-                saveAdmin(); alert("⚠️ 錯誤兩次！數據已全抹除並封鎖30天");
-                location.reload();
-            } else { saveAdmin(); alert("密碼錯誤！剩餘 1 次機會"); }
-        }
+            document.getElementById('st-v').innerText = siteStats.visits;
+            document.getElementById('st-u').innerText = users.length;
+            switchBox('box-admin-panel'); renderKeys();
+        } else alert("無權限");
     }
 
     function renderKeys() {
-        document.getElementById('list-title').innerText = "可用卡密庫";
-        let h = `<div style="padding:15px; border-bottom:1px solid var(--border);"><button class="btn btn-gold" onclick="genK()">+ 生成新卡密</button></div>`;
-        h += keys.map((k,i)=>`<div class="list-item"><div class="item-title">${k.key}</div><button class="btn-red" onclick="delK(${i})">作廢</button></div>`).join('');
-        document.getElementById('admin-list').innerHTML = h || '<p style="text-align:center;color:#444">暫無卡密</p>';
+        let h = `<button class="btn btn-gold" style="margin-bottom:10px" onclick="genK()">+ 生成新卡密</button>`;
+        h += keys.map((k,i)=>`<div class="card" style="padding:10px; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;"><span>${k.key}</span><button class="btn-red" onclick="delK(${i})">刪除</button></div>`).join('');
+        document.getElementById('admin-list').innerHTML = h;
     }
-
     function renderUsers() {
-        document.getElementById('list-title').innerText = "用戶帳密名單";
-        let h = users.map((u,i)=>`<div class="list-item"><div><div class="item-title">${u.name}</div><div class="item-info">密碼: ${u.pwd} | ${u.active?'<span style="color:var(--green)">已激活</span>':'未激活'}</div></div><button class="btn-red" onclick="delU(${i})">刪除</button></div>`).join('');
-        document.getElementById('admin-list').innerHTML = h || '<p style="text-align:center;color:#444">暫無用戶</p>';
+        let h = users.map((u,i)=>`<div class="card" style="padding:10px; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;"><span>${u.name}</span><button class="btn-red" onclick="delU(${i})">刪除</button></div>`).join('');
+        document.getElementById('admin-list').innerHTML = h;
     }
-
-    function genK() {
-        keys.push({key: 'KG-'+Math.random().toString(36).substr(2,6).toUpperCase()+'-'+Math.random().toString(36).substr(2,6).toUpperCase()});
-        localStorage.setItem('kg_k', JSON.stringify(keys)); renderKeys();
-    }
+    function genK() { keys.push({key: 'KG-'+Math.random().toString(36).substr(2,6).toUpperCase()}); localStorage.setItem('kg_k', JSON.stringify(keys)); renderKeys(); }
     function delU(i) { users.splice(i,1); localStorage.setItem('kg_u', JSON.stringify(users)); renderUsers(); }
     function delK(i) { keys.splice(i,1); localStorage.setItem('kg_k', JSON.stringify(keys)); renderKeys(); }
 
-    // --- UI 控制 ---
     function switchBox(id) {
         ['box-login','box-reg','box-user-panel','box-admin-login','box-admin-panel'].forEach(b => document.getElementById(b).style.display='none');
         document.getElementById(id).style.display='block';
-        if(id === 'box-admin-panel') renderKeys();
     }
     function go(id) {
         ['v-auth','v-dev'].forEach(v => document.getElementById(v).classList.toggle('active', v===id));
-        ['m-auth','m-dev'].forEach(m => document.getElementById(m).classList.toggle('active', m==='m-'+id.split('-')[1]));
         toggleM(false);
     }
-    function saveAdmin() { localStorage.setItem('kg_admin_stats', JSON.stringify(adminStats)); }
-    function toggleM(f) { document.getElementById('sidebar').classList.toggle('open', f); }
-    window.onload = checkLock;
+    function toggleM(f) { document.getElementById('sidebar').classList.toggle('open', f !== undefined ? f : !document.getElementById('sidebar').classList.contains('open')); }
+    function copyScript() { navigator.clipboard.writeText(document.getElementById('script-content').innerText); alert("複製成功"); }
+
+    window.onload = () => { setTimeout(()=>document.getElementById('loader').style.display='none', 800); init(); };
 </script>
 </body>
 </html>
