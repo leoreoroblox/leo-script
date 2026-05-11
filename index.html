@@ -3,217 +3,277 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KG Script System - v2.6</title>
+    <title>KG 帳號登入系統</title>
     <style>
-        :root { --main: #00ffcc; --bg: #050505; --red: #ff4444; --card: rgba(10,10,10,0.98); }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; transition: 0.2s ease; }
+        :root { --main: #00ffcc; --bg: #050505; --card: rgba(18,18,18,0.98); --lock: #555; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
 
-        /* 🟦 初次加載（僅在開啟網頁時出現一次） */
-        #loader { position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .prog-wrap { width: 200px; height: 2px; background: #111; margin-top: 20px; }
-        .prog-bar { height: 100%; width: 0%; background: var(--main); box-shadow: 0 0 15px var(--main); }
+        /* 加載畫面 */
+        #loader { position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.6s; }
+        .bar-wrap { width: 200px; height: 2px; background: #111; margin-top: 20px; overflow: hidden; }
+        .bar-fill { width: 0%; height: 100%; background: var(--main); box-shadow: 0 0 15px var(--main); }
 
-        /* 🍔 側邊欄 */
-        .menu-btn { position: fixed; top: 20px; left: 20px; font-size: 28px; z-index: 10000; cursor: pointer; color: white; }
-        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #080808; z-index: 9500; padding-top: 80px; border-right: 1px solid var(--main); }
-        .sidebar.open { left: 0; }
-        .menu-item { padding: 18px 25px; border-bottom: 1px solid #111; cursor: pointer; display: flex; align-items: center; gap: 12px; font-size: 14px; }
-        .menu-item:hover { background: #111; color: var(--main); }
+        /* 側邊欄 */
+        .menu-btn { position: fixed; top: 20px; left: 20px; font-size: 28px; z-index: 10000; cursor: pointer; }
+        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #0a0a0a; z-index: 9500; padding-top: 80px; border-right: 1px solid #1a1a1a; transition: 0.4s; }
+        .sidebar.open { left: 0; box-shadow: 10px 0 50px #000; }
+        .menu-item { padding: 18px 25px; border-bottom: 1px solid #111; cursor: pointer; display: flex; align-items: center; gap: 12px; font-size: 14px; position: relative; }
+        .menu-item.locked { color: var(--lock); filter: grayscale(1); }
+        .menu-item.locked::after { content: '🔒'; position: absolute; right: 20px; font-size: 12px; }
+        .menu-item:not(.locked):active { background: var(--main); color: #000; }
 
-        /* 🌐 頂部控制列（切換與Logo） */
-        .header-tools { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; align-items: center; gap: 15px; }
-        .lang-btn { padding: 5px 12px; background: #111; border: 1px solid #333; border-radius: 5px; color: #fff; font-size: 12px; cursor: pointer; }
-        .lang-btn.active { border-color: var(--main); color: var(--main); }
+        /* 介面切換 */
+        #app-container { height: 100vh; display: none; position: relative; width: 100%; overflow: hidden; }
+        .view { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; transform: translateX(100%); opacity: 0; transition: 0.5s; }
+        .view.active { display: flex; transform: translateX(0); opacity: 1; z-index: 10; }
+        .view.exit { display: flex; transform: translateX(-100%); opacity: 0; z-index: 5; }
 
-        /* 🖼️ Logo 異常修復 */
-        .logo-mini { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #fff; overflow: hidden; display: flex; justify-content: center; align-items: center; background: #000; font-weight: bold; color: var(--main); }
-
-        /* 📱 內容視圖切換器（核心無刷新邏輯） */
-        #app-container { height: 100vh; width: 100vw; display: none; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .view { display: none; width: 100%; max-width: 400px; text-align: center; animation: fadeIn 0.4s forwards; }
-        .view.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-
-        /* 💳 共通卡片樣式 */
-        .card { background: var(--card); border: 1px solid #222; border-radius: 25px; padding: 35px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .btn-main { width: 100%; padding: 16px; border-radius: 12px; border: none; background: var(--main); color: #000; font-weight: bold; cursor: pointer; margin-top: 15px; }
-        .btn-main:active { transform: scale(0.94); box-shadow: 0 0 30px var(--main); }
+        /* 卡片與按鈕 */
+        .card { background: var(--card); border: 1px solid #222; border-radius: 30px; padding: 30px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .btn-main { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--main); color: #000; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .btn-main:active { transform: scale(0.95); box-shadow: 0 0 20px var(--main); }
+        .link-text { color: var(--main); font-size: 12px; cursor: pointer; margin-top: 15px; display: inline-block; text-decoration: underline; }
         
-        input { width: 100%; padding: 16px; background: #000; border: 1px solid #333; border-radius: 12px; color: #fff; text-align: center; margin-bottom: 10px; font-size: 16px; }
-        pre { background: #000; padding: 15px; border-radius: 10px; color: #0f0; font-size: 11px; overflow-x: auto; text-align: left; border: 1px solid #222; margin-top: 10px; }
+        input { width: 100%; padding: 15px; background: #000; border: 1px solid #333; border-radius: 12px; color: #fff; text-align: center; margin-bottom: 10px; }
         
-        /* 👑 管理後台內嵌列表 */
-        .key-list { max-height: 150px; overflow-y: auto; background: #000; border-radius: 10px; margin-top: 10px; border: 1px solid #111; }
-        .key-item { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #080808; font-size: 12px; }
+        /* 驗證碼區域 */
+        .captcha-box { display: flex; gap: 10px; margin-bottom: 10px; }
+        .captcha-box input { margin-bottom: 0; flex: 1; }
+        .captcha-img { width: 100px; height: 48px; background: #111; border: 1px solid #333; border-radius: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="loader">
-    <div id="perc" style="color:var(--main); font-size:24px; font-weight:900;">0%</div>
-    <div class="prog-wrap"><div class="prog-bar" id="bar"></div></div>
+    <div style="font-weight: bold; color: var(--main);">載入中...</div>
+    <div class="bar-wrap"><div class="bar-fill" id="bar"></div></div>
 </div>
 
-<div class="header-tools">
-    <div class="lang-btn active" onclick="changeLang('zh')">ZH</div>
-    <div class="lang-btn" onclick="changeLang('en')">EN</div>
-    <div class="logo-mini">
-        <img src="https://i.postimg.cc/mD8zM9f1/kg-logo.png" style="width:100%" onerror="this.style.display='none'">
-        <span style="position:absolute;">KG</span>
-    </div>
-</div>
-
-<div class="menu-btn" onclick="toggleMenu()">☰</div>
+<div class="menu-btn" onclick="toggleM()">☰</div>
 <div class="sidebar" id="sidebar">
-    <div class="menu-item" onclick="switchView('view-home')">🏠 <span data-zh="返回主頁" data-en="Home">返回主頁</span></div>
-    <div class="menu-item" onclick="switchView('view-copy')">📋 <span data-zh="腳本複製" data-en="Copy Script">腳本複製</span></div>
-    <div class="menu-item" onclick="switchView('view-func')">✨ <span data-zh="腳本功能" data-en="Features">腳本功能</span></div>
-    <div class="menu-item" onclick="switchView('view-log')">📅 <span data-zh="更新日誌" data-en="Update Log">更新日誌</span></div>
-    <div class="menu-item" onclick="switchView('view-pay')" style="color: gold;">💰 <span data-zh="支持一下" data-en="Donation">支持一下</span></div>
+    <div class="menu-item" onclick="go('v-home')">🏠 會員登入</div>
+    <div class="menu-item locked" onclick="go('v-copy')">📋 腳本複製</div>
+    <div class="menu-item locked" onclick="go('v-func')">✨ 腳本功能</div>
+    <div class="menu-item locked" onclick="go('v-demo')">📺 腳本演示</div>
+    <div class="menu-item locked" onclick="go('v-other')">🎮 其他腳本</div>
+    <div class="menu-item" onclick="go('v-log')">📅 更新日誌</div>
+    <div class="menu-item" onclick="go('v-pay')" style="color: gold;">💰 支持一下</div>
 </div>
 
 <div id="app-container">
-    <div id="view-home" class="view active">
-        <div class="card">
-            <h2 data-zh="KG 卡密驗證" data-en="KG Key Auth">KG 卡密驗證</h2>
-            <input type="text" id="key-input" placeholder="請輸入卡密..." data-zh-p="請輸入卡密..." data-en-p="Enter Card Key...">
-            <button class="btn-main" onclick="verify()" data-zh="驗證進入" data-en="Authenticate">驗證進入</button>
-            
-            <div id="admin-ui" style="display:none; margin-top:30px; border-top:1px solid #333; padding-top:20px;">
-                <h4 style="color:var(--main);" data-zh="管理控制台" data-en="Admin Panel">管理控制台</h4>
-                <button class="btn-main" style="padding:10px;" onclick="genKey()" data-zh="⚡ 生成新卡密" data-en="⚡ Gen Key">⚡ 生成新卡密</button>
-                <div class="key-list" id="list"></div>
-                <button class="btn-main" style="background:var(--red); color:#fff; padding:10px;" onclick="delKey()" data-zh="🗑️ 批量刪除" data-en="🗑️ Delete">🗑️ 批量刪除</button>
+    <div id="v-home" class="view active">
+        
+        <div class="card" id="box-login">
+            <h2 style="margin-top:0;">帳號登入</h2>
+            <p id="status" style="font-size:12px; color:var(--red);">請登入以解鎖腳本功能</p>
+            <input type="text" id="l-user" placeholder="使用者名稱">
+            <input type="password" id="l-pwd" placeholder="密碼">
+            <div class="captcha-box">
+                <input type="text" id="l-cap" placeholder="輸入圖中數字">
+                <canvas id="cap-canvas1" class="captcha-img" onclick="drawCaptcha('cap-canvas1')"></canvas>
+            </div>
+            <button class="btn-main" onclick="doLogin()">登入</button>
+            <div style="display:flex; justify-content:space-between;">
+                <span class="link-text" onclick="switchBox('box-forgot')">忘記密碼？</span>
+                <span class="link-text" onclick="switchBox('box-reg')">還沒有帳號？去註冊</span>
             </div>
         </div>
-    </div>
 
-    <div id="view-copy" class="view">
-        <div class="card">
-            <h3 data-zh="腳本代碼" data-en="Script Code">腳本代碼</h3>
-            <pre id="code-area">loadstring(game:HttpGet("https://raw.githubusercontent.com/KG/main/script.lua"))()</pre>
-            <button class="btn-main" onclick="copy()" data-zh="一鍵複製" data-en="Copy All">一鍵複製</button>
+        <div class="card" id="box-reg" style="display:none;">
+            <h2 style="margin-top:0;">註冊新帳號</h2>
+            <input type="text" id="r-user" placeholder="設定使用者名稱">
+            <input type="password" id="r-pwd" placeholder="設定密碼">
+            <input type="password" id="r-pwd2" placeholder="再次確認密碼">
+            <div class="captcha-box">
+                <input type="text" id="r-cap" placeholder="輸入圖中數字">
+                <canvas id="cap-canvas2" class="captcha-img" onclick="drawCaptcha('cap-canvas2')"></canvas>
+            </div>
+            <button class="btn-main" onclick="doReg()">註冊</button>
+            <span class="link-text" onclick="switchBox('box-login')">返回登入</span>
+        </div>
+
+        <div class="card" id="box-forgot" style="display:none;">
+            <h2 style="margin-top:0;">忘記密碼</h2>
+            <div id="f-step1">
+                <p style="font-size:12px;">步驟 1：請輸入您的使用者名稱</p>
+                <input type="text" id="f-user" placeholder="使用者名稱">
+                <button class="btn-main" onclick="checkForgot()">下一步</button>
+            </div>
+            <div id="f-step2" style="display:none;">
+                <p style="font-size:12px; color:var(--main);">找到帳號了！請設定新密碼</p>
+                <input type="password" id="f-pwd" placeholder="輸入新密碼">
+                <button class="btn-main" onclick="resetPwd()">確認重設</button>
+            </div>
+            <span class="link-text" onclick="switchBox('box-login')">返回登入</span>
         </div>
     </div>
 
-    <div id="view-func" class="view">
-        <div class="card">
-            <h3 data-zh="功能清單" data-en="Feature List">功能清單</h3>
-            <ul style="text-align:left; font-size:14px; color:var(--main);">
-                <li>Aimbot / 自動瞄準</li>
-                <li>ESP Wallhack / 透視</li>
-                <li>No Recoil / 無後坐力</li>
-            </ul>
-        </div>
-    </div>
-
-    <div id="view-log" class="view">
-        <div class="card">
-            <h3 data-zh="更新日誌" data-en="Change Log">更新日誌</h3>
-            <p style="font-size:12px; color:#666;">v2.6 - 2026.05.11<br>• SPA 無刷新架構升級<br>• 全面更換為卡密系統</p>
-        </div>
-    </div>
-
-    <div id="view-pay" class="view">
-        <div class="card">
-            <h3 data-zh="支持創作者 ($)" data-en="Support ($)">支持創作者 ($)</h3>
-            <div style="width:120px; height:120px; background:#fff; margin:20px auto; border-radius:10px;"></div>
-            <p data-zh="點擊贊助我們" data-en="Donate to us">點擊贊助我們</p>
-        </div>
-    </div>
+    <div id="v-copy" class="view"><div class="card"><h3>📋 腳本複製</h3><button class="btn-main" onclick="alert('已複製！')">一鍵複製</button></div></div>
+    <div id="v-func" class="view"><div class="card"><h3>✨ 腳本功能</h3><p>透視 / 自瞄 / 加速</p></div></div>
+    <div id="v-demo" class="view"><div class="card"><h3>📺 腳本演示</h3><div style="height:100px; background:#000;">影片區域</div></div></div>
+    <div id="v-other" class="view"><div class="card"><h3>🎮 其他腳本</h3><p>躲貓貓 / 射擊遊戲</p></div></div>
+    
+    <div id="v-log" class="view"><div class="card"><h3>📅 更新日誌</h3><p>新增帳號密碼登入系統！</p></div></div>
+    <div id="v-pay" class="view"><div class="card"><h3>💰 支持一下</h3><p>謝謝你的打賞！</p></div></div>
 </div>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('kg_v2_db')) || [];
-    let curLang = 'zh';
+    // 資料庫存帳號密碼
+    let users = JSON.parse(localStorage.getItem('kg_users')) || [];
+    let currentId = 'v-home';
+    let isLoggedIn = false;
+    let currentCaptcha = "";
+    let tempResetUser = "";
 
-    // 無刷新視圖切換邏輯
-    function switchView(id) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        toggleMenu(false);
-    }
-
-    function toggleMenu(force) {
-        const s = document.getElementById('sidebar');
-        if(force === false) s.classList.remove('open');
-        else s.classList.toggle('open');
-    }
-
-    function changeLang(l) {
-        curLang = l;
-        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-        event.target.classList.add('active');
-        document.querySelectorAll('[data-zh]').forEach(el => {
-            el.innerText = el.getAttribute('data-' + l);
-        });
-        const inp = document.getElementById('key-input');
-        inp.placeholder = inp.getAttribute('data-' + l + '-p');
-    }
-
-    // 卡密驗證與管理
-    function verify() {
-        const val = document.getElementById('key-input').value;
-        if(val === 'KGscriptWEB:admin') {
-            document.getElementById('admin-ui').style.display = 'block';
-            alert(curLang === 'zh' ? '管理員權限已解鎖' : 'Admin Access Granted');
-        } else {
-            const found = db.find(k => k.code === val);
-            if(found) alert('Success!');
-            else alert('Invalid Key');
+    // 畫圖片驗證碼 (產生隨機 4 個數字)
+    function drawCaptcha(canvasId) {
+        const cvs = document.getElementById(canvasId);
+        const ctx = cvs.getContext('2d');
+        cvs.width = 100; cvs.height = 48;
+        
+        ctx.fillStyle = '#222';
+        ctx.fillRect(0, 0, 100, 48);
+        
+        currentCaptcha = Math.floor(1000 + Math.random() * 9000).toString();
+        
+        ctx.font = '24px Arial';
+        ctx.fillStyle = 'var(--main)';
+        ctx.fillText(currentCaptcha, 20, 32);
+        
+        // 畫一些干擾線
+        for(let i=0; i<3; i++) {
+            ctx.beginPath();
+            ctx.moveTo(Math.random()*100, Math.random()*48);
+            ctx.lineTo(Math.random()*100, Math.random()*48);
+            ctx.strokeStyle = '#fff';
+            ctx.stroke();
         }
     }
 
-    function genKey() {
-        const code = "KGCARD-" + Math.random().toString(36).substr(2, 7).toUpperCase();
-        db.push({ id: Date.now(), code: code });
-        save();
+    // 在同一個畫面切換 登入/註冊/忘記密碼
+    function switchBox(boxId) {
+        document.getElementById('box-login').style.display = 'none';
+        document.getElementById('box-reg').style.display = 'none';
+        document.getElementById('box-forgot').style.display = 'none';
+        document.getElementById(boxId).style.display = 'block';
+        
+        document.getElementById('f-step1').style.display = 'block';
+        document.getElementById('f-step2').style.display = 'none';
+        
+        drawCaptcha('cap-canvas1');
+        drawCaptcha('cap-canvas2');
     }
 
-    function delKey() {
-        const cks = document.querySelectorAll('.ck:checked');
-        const ids = Array.from(cks).map(c => parseInt(c.dataset.id));
-        db = db.filter(k => !ids.includes(k.id));
-        save();
+    // 註冊功能
+    function doReg() {
+        const u = document.getElementById('r-user').value;
+        const p1 = document.getElementById('r-pwd').value;
+        const p2 = document.getElementById('r-pwd2').value;
+        const cap = document.getElementById('r-cap').value;
+
+        if(!u || !p1) return alert('帳號密碼不能是空的！');
+        if(p1 !== p2) return alert('兩次密碼不一樣喔！');
+        if(cap !== currentCaptcha) return alert('圖片驗證碼輸入錯誤！');
+        if(users.find(x => x.name === u)) return alert('這個帳號有人用過了！');
+
+        users.push({ name: u, pwd: p1 });
+        localStorage.setItem('kg_users', JSON.stringify(users));
+        alert('註冊成功！請登入吧');
+        switchBox('box-login');
     }
 
-    function save() {
-        localStorage.setItem('kg_v2_db', JSON.stringify(db));
-        renderList();
+    // 登入功能
+    function doLogin() {
+        const u = document.getElementById('l-user').value;
+        const p = document.getElementById('l-pwd').value;
+        const cap = document.getElementById('l-cap').value;
+
+        if(cap !== currentCaptcha) return alert('圖片驗證碼輸入錯誤！');
+
+        const found = users.find(x => x.name === u && x.pwd === p);
+        if(found) {
+            isLoggedIn = true;
+            document.getElementById('status').innerText = `✅ 歡迎回來，${u}！功能已解鎖`;
+            document.getElementById('status').style.color = "var(--main)";
+            document.querySelectorAll('.menu-item.locked').forEach(el => el.classList.remove('locked'));
+            alert('登入成功！可以打開左邊選單使用功能了。');
+        } else {
+            alert('帳號或密碼錯誤！');
+            drawCaptcha('cap-canvas1');
+        }
     }
 
-    function renderList() {
-        const box = document.getElementById('list');
-        box.innerHTML = db.map(k => `
-            <div class="key-item">
-                <input type="checkbox" class="ck" data-id="${k.id}">
-                <span style="color:var(--main); margin-left:10px;">${k.code}</span>
-            </div>
-        `).join('') || '<div style="padding:10px; color:#333;">EMPTY</div>';
+    // 忘記密碼 - 步驟1
+    function checkForgot() {
+        const u = document.getElementById('f-user').value;
+        const found = users.find(x => x.name === u);
+        if(found) {
+            tempResetUser = u;
+            document.getElementById('f-step1').style.display = 'none';
+            document.getElementById('f-step2').style.display = 'block';
+        } else {
+            alert('找不到這個帳號喔！');
+        }
     }
 
-    function copy() {
-        navigator.clipboard.writeText(document.getElementById('code-area').innerText);
-        alert('Copied!');
+    // 忘記密碼 - 步驟2
+    function resetPwd() {
+        const newP = document.getElementById('f-pwd').value;
+        if(!newP) return alert('密碼不能是空的！');
+        
+        let target = users.find(x => x.name === tempResetUser);
+        if(target) target.pwd = newP;
+        
+        localStorage.setItem('kg_users', JSON.stringify(users));
+        alert('密碼重設成功！請重新登入');
+        switchBox('box-login');
     }
 
-    // 初次啟動加載條
+    // 切換左邊的介面
+    function go(nextId) {
+        if(nextId === currentId) return;
+        const lockedIds = ['v-copy', 'v-func', 'v-demo', 'v-other'];
+        
+        if(!isLoggedIn && lockedIds.includes(nextId)) {
+            alert('❌ 嘿！要先登入才能看這個喔！');
+            return;
+        }
+
+        const curr = document.getElementById(currentId);
+        const next = document.getElementById(nextId);
+
+        curr.classList.remove('active');
+        curr.classList.add('exit');
+        next.style.display = 'flex';
+        setTimeout(() => { next.classList.add('active'); }, 10);
+        setTimeout(() => {
+            curr.style.display = 'none';
+            curr.classList.remove('exit');
+            currentId = nextId;
+        }, 500);
+        toggleM(false);
+    }
+
+    function toggleM(f) {
+        const s = document.getElementById('sidebar');
+        if(f === false) s.classList.remove('open');
+        else s.classList.toggle('open');
+    }
+
     window.onload = () => {
+        drawCaptcha('cap-canvas1');
         let p = 0;
-        const b = document.getElementById('bar'), t = document.getElementById('perc');
+        const b = document.getElementById('bar');
         const itv = setInterval(() => {
-            p += Math.floor(Math.random()*6)+2;
+            p += 15;
             if(p >= 100) {
-                p=100; clearInterval(itv);
-                setTimeout(() => {
-                    document.getElementById('loader').style.display = 'none';
-                    document.getElementById('app-container').style.display = 'flex';
-                }, 500);
+                clearInterval(itv);
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
             }
-            b.style.width = p + "%"; t.innerText = p + "%";
-        }, 50);
-        renderList();
+            b.style.width = p + "%";
+        }, 40);
     };
 </script>
 </body>
