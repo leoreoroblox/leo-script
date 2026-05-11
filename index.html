@@ -3,39 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雷歐腳本中心</title>
+    <title>KG 腳本中心</title>
     <style>
-        body { font-family: sans-serif; background: #121212; color: white; text-align: center; padding: 20px; }
-        .box { background: #1e1e1e; padding: 20px; border-radius: 15px; max-width: 400px; margin: auto; border: 1px solid #333; }
-        input { width: 80%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #000; color: white; }
-        button { background: #ff4757; color: white; border: none; padding: 12px 20px; border-radius: 8px; width: 85%; cursor: pointer; }
-        #adminArea { display: none; margin-top: 20px; border-top: 1px solid #333; padding-top: 20px; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: white; overflow-x: hidden; }
+        #bg { position: fixed; top:0; left:0; width:100%; height:100%; z-index:-1; background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%); }
+        .box { background: rgba(30, 30, 30, 0.9); padding: 30px; border-radius: 20px; max-width: 450px; margin: 50px auto; border: 1px solid #444; box-shadow: 0 0 20px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
+        h1 { color: #00ffcc; text-shadow: 0 0 10px rgba(0,255,204,0.5); }
+        input { width: 85%; padding: 12px; margin: 15px 0; border-radius: 8px; border: 1px solid #333; background: rgba(0,0,0,0.5); color: #00ffcc; font-size: 16px; text-align: center; }
+        button { background: linear-gradient(45deg, #00ffcc, #00a8ff); color: #000; border: none; padding: 12px 25px; border-radius: 8px; width: 90%; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { transform: scale(1.02); box-shadow: 0 0 15px rgba(0,255,204,0.4); }
+        .footer { margin-top: 30px; font-size: 12px; color: #666; cursor: pointer; }
+        #adminArea { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px dotted #444; }
+        .key-item { background: #000; padding: 8px; margin: 5px 0; border-radius: 5px; font-family: monospace; color: #00ffcc; font-size: 14px; }
+        .dc-btn { background: #5865F2; margin-top: 10px; width: auto; padding: 8px 15px; font-size: 12px; color: white; }
     </style>
 </head>
 <body>
+<div id="bg"></div>
 <div class="box">
-    <h1>雷歐 ROBLOX 腳本</h1>
-    <input type="text" id="inputKey" placeholder="輸入卡密">
-    <button onclick="verify()">驗證卡密</button>
-    <p style="color:#444; font-size:10px" onclick="login()">管理員入口</p>
+    <h1>KG 腳本中心</h1>
+    <p style="color:#aaa">專業 Roblox 腳本驗證系統</p>
+    
+    <input type="text" id="inputKey" placeholder="請輸入 KG 授權卡密">
+    <button onclick="verify()">驗證並自動複製腳本</button>
+    
+    <button class="dc-btn" onclick="window.open('https://discord.gg/你的邀請碼')">加入 Discord</button>
+
+    <div class="footer" onclick="login()">© 2026 KG SCRIPT ADMIN</div>
+
     <div id="adminArea">
-        <button style="background:#2ecc71" onclick="gen()">生成卡密</button>
-        <div id="keyList" style="color:#aaa; margin-top:10px"></div>
+        <h3 style="color:#00ffcc">管理後台</h3>
+        <button style="background:#00ffcc; color:#000" onclick="gen()">生成 1 小時臨時卡密</button>
+        <div id="keyList" style="margin-top:10px"></div>
     </div>
 </div>
+
 <script>
-    let keys = [];
+    // 在這裡填入你的 Roblox 腳本代碼
+    const myScript = '-- KG Script Loaded!\nprint("KG腳本運行中...")\n-- 這裡替換成你的代碼';
+    let keys = {};
+
     function verify() {
         const input = document.getElementById('inputKey').value;
-        const i = keys.indexOf(input);
-        if (i > -1) { keys.splice(i, 1); alert("成功！腳本已複製。"); }
-        else { alert("無效卡密！"); }
+        const now = Date.now();
+        if (keys[input] && keys[input] > now) {
+            navigator.clipboard.writeText(myScript);
+            alert("✅ KG 驗證成功！\n\n腳本已複製。");
+            delete keys[input]; 
+        } else {
+            alert("❌ 卡密無效！");
+        }
     }
-    function login() { if(prompt("密碼")==="123") document.getElementById('adminArea').style.display="block"; }
+
+    function login() {
+        if(prompt("管理員金鑰:") === "kg888") { 
+            document.getElementById('adminArea').style.display = "block";
+            alert("歡迎回來，KG！");
+        }
+    }
+
     function gen() {
-        const k = "LEO-" + Math.random().toString(36).substr(2,6).toUpperCase();
-        keys.push(k);
-        document.getElementById('keyList').innerHTML = keys.join('<br>');
+        const k = "KG-" + Math.random().toString(36).substr(2, 6).toUpperCase();
+        keys[k] = Date.now() + 3600000; 
+        
+        const item = document.createElement('div');
+        item.className = 'key-item';
+        item.innerHTML = `${k} <br><small>(60分鐘內有效)</small>`;
+        document.getElementById('keyList').prepend(item);
     }
 </script>
 </body>
