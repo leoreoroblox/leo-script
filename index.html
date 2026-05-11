@@ -3,340 +3,298 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LEO HUB | SUPER V13</title>
+    <title>LEO HUB | THE SINGULARITY V15.0</title>
     <style>
-        :root { --primary: #00ffcc; --bg: #050505; --glass: rgba(255,255,255,0.03); --admin-red: #ff4d4d; --gold: #ffd700; }
-        /* 1. 專屬滑鼠游標 */
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; color: #fff; background: #000; cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%2300ffcc" d="M7 2l12 11.2-5.8.5 3.3 7.3-2.2 1-3.2-7.4-4.4 4.8z"/></svg>'), auto; }
+        :root { --primary: #00ffcc; --bg: #050505; --glass: rgba(255,255,255,0.03); --admin-red: #ff4d4d; --gold: #ffd700; --neon-shadow: 0 0 15px rgba(0,255,204,0.5); }
         
-        button, .nav-item, p { cursor: pointer; }
+        * { cursor: none !important; } /* 使用自定義光標 */
 
-        /* 加載動畫 */
-        #loader { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.8s; }
-        .spinner { width: 60px; height: 60px; border: 4px solid rgba(0,255,204,0.1); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; color: #fff; background: #000; }
 
-        /* UI 元件 */
-        .glass { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; }
-        .btn { background: var(--primary); color: #000; padding: 12px; border-radius: 12px; border: none; font-weight: 900; width: 100%; margin-top: 10px; transition: 0.2s; }
+        /* 1. 完美 Canvas 背景 */
+        #canvas-bg { position: fixed; inset: 0; z-index: -1; }
+
+        /* 自定義光標與能量光暈 */
+        #cursor-dot { position: fixed; width: 6px; height: 6px; background: var(--primary); border-radius: 50%; pointer-events: none; z-index: 10000; transition: transform 0.1s; }
+        #cursor-glow { position: fixed; width: 200px; height: 200px; background: radial-gradient(circle, rgba(0,255,204,0.15) 0%, transparent 70%); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); transition: width 0.3s, height 0.3s; }
+
+        /* 2. 加載儀式 */
+        #loader { position: fixed; inset: 0; background: #000; z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 1s cubic-bezier(0.8, 0, 0.2, 1); }
+        .scanner-line { width: 250px; height: 2px; background: var(--primary); box-shadow: var(--neon-shadow); animation: scan 2s infinite; }
+        @keyframes scan { 0%, 100% { transform: translateY(-50px); opacity: 0; } 50% { transform: translateY(50px); opacity: 1; } }
+
+        /* 3. 完美 UI 組件 - 呼吸流光邊框 */
+        .glass { background: var(--glass); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; position: relative; overflow: hidden; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .glass::before { content: ""; position: absolute; inset: 0; border: 2px solid transparent; border-radius: 20px; background: linear-gradient(90deg, transparent, var(--primary), transparent) border-box; -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0); mask-composite: exclude; background-size: 200% 100%; animation: moveLight 4s linear infinite; opacity: 0.3; }
+        @keyframes moveLight { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        .btn { background: var(--primary); color: #000; padding: 12px; border-radius: 12px; border: none; font-weight: 900; width: 100%; margin-top: 10px; transition: 0.3s; position: relative; overflow: hidden; }
+        .btn:hover { box-shadow: var(--neon-shadow); transform: translateY(-2px); }
         .btn:active { transform: scale(0.95); }
-        input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.6); color: #fff; box-sizing: border-box; outline: none; }
-        .error-msg { color: var(--admin-red); font-size: 11px; text-align: left; display: none; margin-bottom: 10px; }
 
-        /* 導航與跑馬燈 */
-        .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; align-items: center; padding: 0 20px; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.8); }
-        
-        /* 2. 全服跑馬燈廣播 */
-        .marquee-box { position: fixed; top: 60px; width: 100%; background: rgba(0,255,204,0.15); color: var(--primary); font-size: 12px; padding: 6px 0; overflow: hidden; white-space: nowrap; z-index: 99; border-bottom: 1px solid rgba(0,255,204,0.3); font-weight: bold; }
-        .marquee { display: inline-block; animation: scrollText 15s linear infinite; }
-        @keyframes scrollText { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+        input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.6); color: #fff; box-sizing: border-box; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(0,255,204,0.2); }
 
-        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; padding-top: 100px; transition: 0.4s; z-index: 200; background: #080808; border-right: 1px solid var(--primary); }
+        /* 故障藝術效果 */
+        .glitch { animation: glitch 0.3s infinite; }
+        @keyframes glitch {
+            0% { transform: translate(0); text-shadow: -2px 0 red, 2px 0 blue; }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); text-shadow: 2px 0 red, -2px 0 blue; }
+            60% { transform: translate(2px, 2px); }
+            100% { transform: translate(0); }
+        }
+
+        /* 導航與視圖 */
+        .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; align-items: center; padding: 0 25px; z-index: 1000; background: rgba(0,0,0,0.8); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; padding-top: 100px; transition: 0.5s cubic-bezier(0.8, 0, 0.2, 1); z-index: 2000; background: rgba(5,5,5,0.95); border-right: 1px solid var(--primary); }
         .sidebar.active { left: 0; }
-        .nav-item { padding: 15px 25px; opacity: 0.7; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .nav-item.active { opacity: 1; color: var(--primary); background: rgba(0,255,204,0.1); }
+        .nav-item { padding: 18px 30px; opacity: 0.6; transition: 0.3s; }
+        .nav-item.active { opacity: 1; color: var(--primary); background: rgba(0,255,204,0.1); border-left: 4px solid var(--primary); }
 
-        /* 視圖 */
-        .view { display: none; padding: 100px 20px 40px; height: 100vh; overflow-y: auto; box-sizing: border-box; }
-        .view.active { display: block; animation: fadeIn 0.4s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .view { display: none; padding: 100px 20px; height: 100vh; overflow-y: auto; box-sizing: border-box; }
+        .view.active { display: block; animation: viewSlide 0.6s ease-out; }
+        @keyframes viewSlide { from { opacity: 0; transform: scale(0.9) translateY(30px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-        /* 數據統計 */
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; text-align: center; }
-        .stat-val { font-size: 22px; font-weight: 900; color: var(--primary); }
-        .stat-label { font-size: 10px; opacity: 0.5; }
-
-        /* 3. 等級徽章 */
-        .badge { background: var(--primary); color: #000; padding: 2px 6px; border-radius: 5px; font-size: 9px; font-weight: bold; margin-left: 5px; }
-        .badge-vip { background: var(--gold); }
+        #toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; padding: 12px 40px; border-radius: 50px; font-weight: 900; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 99999; }
         
-        #toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; padding: 12px 30px; border-radius: 50px; font-weight: bold; transition: 0.4s; z-index: 9999; }
-        
-        /* 頭像選擇 */
-        .avatar-btn { font-size: 24px; background: none; border: none; cursor: pointer; transition: 0.2s; }
-        .avatar-btn:hover { transform: scale(1.2); }
+        .stat-box { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
     </style>
 </head>
 <body onload="init()">
 
+<canvas id="canvas-bg"></canvas>
+<div id="cursor-dot"></div>
+<div id="cursor-glow"></div>
+
 <div id="loader">
-    <div class="spinner"></div>
-    <p style="margin-top:20px; color:var(--primary); letter-spacing:3px;">SYSTEM BOOTING...</p>
+    <div class="scanner-line"></div>
+    <p id="load-text" style="margin-top:30px; color:var(--primary); letter-spacing:8px; font-size:12px; font-weight:bold;">INITIALIZING SYSTEM</p>
 </div>
 
 <header class="header">
-    <div onclick="toggleMenu()" style="font-size:24px;">☰</div>
-    <div style="margin-left:20px; font-weight:900;">LEO HUB 
-        <span id="u-tag" style="font-size:12px; opacity:0.8; margin-left:10px;">👻 訪客</span>
-        <span id="u-badge" class="badge" style="display:none;">新手</span>
-    </div>
+    <div onclick="toggleMenu()" style="cursor:pointer; font-size:24px;">☰</div>
+    <div style="margin-left:20px; font-weight:900; letter-spacing:2px;">LEO HUB <span id="u-tag" style="font-size:10px; opacity:0.3; margin-left:10px;">V15.0 PERFECT</span></div>
 </header>
 
-<div class="marquee-box">
-    <div class="marquee" id="mq-text">📢 歡迎來到 LEO HUB！目前系統穩定運行中...</div>
-</div>
-
 <aside class="sidebar" id="sb">
-    <div class="nav-item active" onclick="go('v-auth')">🔐 帳戶驗證</div>
-    <div class="nav-item" onclick="go('v-copy')">📋 腳本大廳</div>
-    <div class="nav-item" onclick="go('v-creators')">👥 創作者名單</div>
-    <div class="nav-item" onclick="go('v-admin')" id="adm-nav" style="display:none; color:var(--admin-red);">⚙️ 管理後台</div>
-    <div class="nav-item" onclick="location.reload()" style="opacity:0.3; margin-top:20px;">🚪 退出登入</div>
+    <div class="nav-item active" onclick="go('v-auth')">🔐 安全中心</div>
+    <div class="nav-item" onclick="go('v-copy')">📋 腳本終端</div>
+    <div class="nav-item" onclick="go('v-creators')">👥 核心團隊</div>
+    <div class="nav-item" onclick="go('v-admin')" id="adm-nav" style="display:none; color:var(--admin-red);">⚙️ 管理矩陣</div>
+    <div class="nav-item" onclick="location.reload()" style="opacity:0.3; margin-top:20px;">🚪 終斷連接</div>
 </aside>
 
 <main>
     <div id="v-auth" class="view active">
-        <div class="glass" style="max-width:380px; margin:auto; padding:30px;">
-            <h2 id="auth-title" style="text-align:center;">登入系統</h2>
+        <div class="glass" id="auth-box" style="max-width:380px; margin:auto; padding:40px;">
+            <h2 id="auth-title" style="text-align:center; letter-spacing:5px;">SYSTEM LOGIN</h2>
             
-            <div style="display:flex; gap:5px; margin-bottom:20px;">
-                <button class="btn" style="font-size:11px;" onclick="setAuth('user')">用戶</button>
-                <button class="btn" style="font-size:11px; background:#333; color:#fff;" onclick="setAuth('admin')">管理員</button>
+            <div style="display:flex; gap:10px; margin-bottom:25px;">
+                <button class="btn" style="font-size:10px; background:#111; color:var(--primary); border:1px solid var(--primary);" onclick="setAuth('user')">USER</button>
+                <button class="btn" style="font-size:10px; background:#111; color:#555;" onclick="setAuth('admin')">ADMIN</button>
             </div>
 
-            <input type="text" id="ipt-u" placeholder="使用者名稱 (英數字與一個_)">
-            <div id="err-u" class="error-msg"></div>
+            <input type="text" id="ipt-u" placeholder="USERNAME (WITH _)">
+            <input type="password" id="ipt-p" placeholder="PASSWORD (WITH _)">
+            <input type="password" id="ipt-p2" placeholder="CONFIRM PASSWORD" style="display:none;">
             
-            <input type="password" id="ipt-p" placeholder="密碼 (英數字與一個_)">
-            <div id="err-p" class="error-msg"></div>
-
-            <input type="password" id="ipt-p2" placeholder="確認密碼" style="display:none;">
-            
-            <button class="btn" onclick="handleAuth()" id="main-btn">確認</button>
-            <p id="sw-text" onclick="toggleReg()" style="text-align:center; font-size:12px; color:var(--primary); margin-top:20px;">點此註冊</p>
+            <button class="btn" onclick="handleAuth()" id="main-btn">ACCESS</button>
+            <p id="sw-text" onclick="toggleReg()" style="text-align:center; font-size:11px; color:var(--primary); margin-top:25px; opacity:0.6;">NEW IDENTITY? REGISTER</p>
         </div>
     </div>
 
     <div id="v-copy" class="view">
-        <div style="max-width:600px; margin:auto;">
-            <div class="glass" style="padding:20px; margin-bottom:20px; text-align:center;">
-                <h3 style="margin-top:0;">我的個人資料</h3>
-                <div style="font-size:40px; margin-bottom:10px;" id="my-avatar">👻</div>
-                <p style="font-size:14px;">等級積分：<span id="my-pts" style="color:var(--primary); font-weight:bold;">0</span></p>
-                <button class="btn" style="width:120px; background:var(--gold);" onclick="checkIn()">🎁 每日簽到</button>
-                
-                <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
-                    <p style="font-size:12px; opacity:0.5; margin-bottom:5px;">更換頭像</p>
-                    <button class="avatar-btn" onclick="setAvatar('🤖')">🤖</button>
-                    <button class="avatar-btn" onclick="setAvatar('🐱')">🐱</button>
-                    <button class="avatar-btn" onclick="setAvatar('🐉')">🐉</button>
-                    <button class="avatar-btn" onclick="setAvatar('👽')">👽</button>
-                    <button class="avatar-btn" onclick="setAvatar('🤡')">🤡</button>
+        <div style="max-width:650px; margin:auto;">
+            <div class="glass" style="padding:25px; margin-bottom:25px; text-align:center;">
+                <div style="font-size:50px; margin-bottom:15px;" id="my-avatar">🤖</div>
+                <div id="my-name" style="font-weight:900; font-size:18px;">GUEST</div>
+                <div style="margin:15px 0;">
+                    <span style="opacity:0.5; font-size:12px;">LEVEL POINTS: </span>
+                    <span id="my-pts" style="color:var(--primary); font-weight:900;">0</span>
                 </div>
+                <button class="btn" style="width:150px; background:var(--gold);" onclick="checkIn()">DAILY SIGN-IN</button>
             </div>
-
-            <h3>🔥 熱門腳本</h3>
+            <h3 style="letter-spacing:2px; border-left:4px solid var(--primary); padding-left:15px;">SCRIPTS_DATABASE</h3>
             <div id="s-list"></div>
         </div>
     </div>
 
     <div id="v-creators" class="view">
-        <div class="glass" style="max-width:500px; margin:auto; padding:25px;">
-            <h3 style="color:var(--primary);">腳本創作者名單</h3>
-            <p>總策劃 / 總創作者 / 腳本創作：張碩</p>
-            <p>合作者：雷歐REO_ROBLOX</p>
-            <hr style="opacity:0.1;">
-            <p>網站總負責人 / 設計 / 程式：雷歐REO_ROBLOX</p>
-            <p>網站管理員：雷歐REO_ROBLOX，張碩</p>
+        <div class="glass" style="max-width:550px; margin:auto; padding:35px;">
+            <h3 style="color:var(--primary);">CREDITS</h3>
+            <p><b>CHIEF ARCHITECT:</b> 張碩</p>
+            <p><b>PARTNER:</b> 雷歐REO_ROBLOX</p>
+            <hr style="opacity:0.1; margin:20px 0;">
+            <p><b>WEB DEVELOPER:</b> 雷歐REO_ROBLOX</p>
+            <p><b>SYSTEM ADMIN:</b> 雷歐REO_ROBLOX, 張碩</p>
         </div>
     </div>
 
     <div id="v-admin" class="view">
-        <div style="max-width:600px; margin:auto;">
-            <div class="glass" style="padding:20px; margin-bottom:20px;">
-                <h3 style="margin:0 0 15px;">📊 系統統計數據</h3>
-                <div class="stat-grid">
-                    <div class="stat-box"><div class="stat-val" id="st-v">0</div><div class="stat-label">總訪問次數</div></div>
-                    <div class="stat-box"><div class="stat-val" id="st-u">0</div><div class="stat-label">總註冊人數</div></div>
-                    <div class="stat-box"><div class="stat-val" id="st-s">0</div><div class="stat-label">總使用次數</div></div>
-                    <div class="stat-box"><div class="stat-val" id="st-i">0</div><div class="stat-label">資源總數量</div></div>
+        <div style="max-width:700px; margin:auto;">
+            <div class="glass" style="padding:30px; margin-bottom:25px;">
+                <h3>MATRIX STATISTICS</h3>
+                <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:15px;">
+                    <div class="stat-box"><div style="font-size:30px; color:var(--primary);" id="st-v">0</div><div style="font-size:10px; opacity:0.5;">VISITS</div></div>
+                    <div class="stat-box"><div style="font-size:30px; color:var(--primary);" id="st-u">0</div><div style="font-size:10px; opacity:0.5;">USERS</div></div>
+                    <div class="stat-box"><div style="font-size:30px; color:var(--primary);" id="st-s">0</div><div style="font-size:10px; opacity:0.5;">COPIES</div></div>
+                    <div class="stat-box"><div style="font-size:30px; color:var(--primary);" id="st-i">0</div><div style="font-size:10px; opacity:0.5;">ASSETS</div></div>
                 </div>
             </div>
-            <div class="glass" style="padding:20px;">
-                <h3>🛠️ 發布新腳本</h3>
-                <input id="ad-n" placeholder="腳本名">
-                <input id="ad-c" placeholder="代碼">
-                <button class="btn" onclick="addS()">發布</button>
+            <div class="glass" style="padding:30px;">
+                <h3 style="color:var(--admin-red);">DEPLOY ASSET</h3>
+                <input id="ad-n" placeholder="ASSET NAME">
+                <input id="ad-c" placeholder="SOURCE CODE">
+                <button class="btn" onclick="addS()">SYNC TO CLOUD</button>
             </div>
         </div>
     </div>
 </main>
 
-<div id="toast">系統通知</div>
+<div id="toast">SYSTEM NOTIFICATION</div>
 
 <script>
-    // 5. 音效系統 (使用瀏覽器內建合成器，免下載檔案)
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playBeep(freq, dur, type='sine') {
-        try {
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type; osc.frequency.value = freq;
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + dur);
-            setTimeout(() => osc.stop(), dur * 1000);
-        } catch(e){}
+    // 1. 頂級音效與物理系統
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(f, d, t='sine', v=0.1) {
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = t; o.frequency.value = f; g.gain.setValueAtTime(v, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + d);
+        o.connect(g); g.connect(ctx.destination); o.start(); setTimeout(()=>o.stop(), d*1000);
     }
-    function soundClick() { playBeep(600, 0.1); }
-    function soundSuccess() { playBeep(800, 0.1); setTimeout(()=>playBeep(1200, 0.2), 100); }
-    function soundErr() { playBeep(300, 0.2, 'square'); }
 
-    // 所有按鈕加上點擊音效
-    document.addEventListener('click', (e) => {
-        if(e.target.tagName === 'BUTTON' || e.target.classList.contains('nav-item')) soundClick();
+    // 2. 完美 Canvas 粒子物理背景
+    const canvas = document.getElementById('canvas-bg');
+    const c = canvas.getContext('2d');
+    let points = [];
+    const mouse = { x: null, y: null };
+
+    window.addEventListener('mousemove', e => { 
+        mouse.x = e.x; mouse.y = e.y;
+        document.getElementById('cursor-dot').style.transform = `translate(${e.x}px, ${e.y}px)`;
+        document.getElementById('cursor-glow').style.left = e.x + 'px';
+        document.getElementById('cursor-glow').style.top = e.y + 'px';
     });
 
-    // 數據庫
-    let USERS = JSON.parse(localStorage.getItem('DB_USERS_V13')) || [];
-    let SCRIPTS = JSON.parse(localStorage.getItem('DB_SCRIPTS_V13')) || [{n:"萬用腳本", c:"print('LEO')", likes:0}];
-    let STATS = JSON.parse(localStorage.getItem('DB_STATS_V13')) || {v:0, s:0};
+    function initCanvas() {
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        points = [];
+        for(let i=0; i<80; i++) points.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 });
+    }
+
+    function animate() {
+        c.clearRect(0, 0, canvas.width, canvas.height);
+        points.forEach(p => {
+            p.x += p.vx; p.y += p.vy;
+            if(p.x<0 || p.x>canvas.width) p.vx *= -1; if(p.y<0 || p.y>canvas.height) p.vy *= -1;
+            
+            // 引力感應
+            let dx = mouse.x - p.x; let dy = mouse.y - p.y;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            if(dist < 150) { p.x -= dx*0.02; p.y -= dy*0.02; }
+
+            c.fillStyle = 'rgba(0, 255, 204, 0.3)';
+            c.beginPath(); c.arc(p.x, p.y, 1.5, 0, Math.PI*2); c.fill();
+            
+            points.forEach(p2 => {
+                let d = Math.sqrt((p.x-p2.x)**2 + (p.y-p2.y)**2);
+                if(d < 100) {
+                    c.strokeStyle = `rgba(0, 255, 204, ${1 - d/100})`;
+                    c.lineWidth = 0.5; c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(p2.x, p2.y); c.stroke();
+                }
+            });
+        });
+        requestAnimationFrame(animate);
+    }
+
+    // 3. 核心數據邏輯 (保持原有嚴格驗證)
+    let USERS = JSON.parse(localStorage.getItem('DB_V15_USERS')) || [];
+    let SCRIPTS = JSON.parse(localStorage.getItem('DB_V15_SCRIPTS')) || [{n:"ULTIMATE_BASE", c:"print('LEO HUB PERFECT')", likes:88}];
+    let STATS = JSON.parse(localStorage.getItem('DB_V15_STATS')) || {v:0, s:0};
     let sess = null, isReg = false, mode = 'user';
 
     function init() {
+        initCanvas(); animate();
         setTimeout(() => {
-            document.getElementById('loader').style.opacity = '0';
-            setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+            document.getElementById('loader').style.transform = 'translateY(-100%)';
             STATS.v++; save();
-            runBroadcast();
-        }, 1200);
+            playSound(400, 0.5, 'triangle');
+        }, 2000);
     }
 
-    // 跑馬燈廣播系統
-    const b_msgs = ["📢 LEO HUB 系統升級完成！", "🔥 新增每日簽到與排行榜功能！", "💎 贊助支持請聯絡管理員！"];
-    function runBroadcast(){
-        setInterval(()=>{
-            let text = b_msgs[Math.floor(Math.random() * b_msgs.length)];
-            document.getElementById('mq-text').innerText = text;
-        }, 15000);
-    }
-    function addBroadcast(t) {
-        document.getElementById('mq-text').innerText = "📢 " + t;
-        b_msgs.push(t);
-        if(b_msgs.length > 10) b_msgs.shift();
-    }
-
-    function msg(t, ok=true){ 
+    function msg(t, type='ok'){ 
         const o=document.getElementById('toast'); o.innerText=t; o.style.bottom='40px'; 
+        o.style.background = type==='ok' ? 'var(--primary)' : 'var(--admin-red)';
         setTimeout(()=>o.style.bottom='-80px',2500); 
-        if(ok) soundSuccess(); else soundErr();
+        if(type==='ok') playSound(800, 0.2); else { playSound(200, 0.3, 'square'); shake(document.getElementById('auth-box')); }
     }
-    function toggleMenu(){ document.getElementById('sb').classList.toggle('active'); }
-    function save(){ 
-        localStorage.setItem('DB_USERS_V13', JSON.stringify(USERS)); 
-        localStorage.setItem('DB_SCRIPTS_V13', JSON.stringify(SCRIPTS));
-        localStorage.setItem('DB_STATS_V13', JSON.stringify(STATS));
-    }
+
+    function shake(el) { el.classList.add('glitch'); setTimeout(()=>el.classList.remove('glitch'), 500); }
+    function toggleMenu(){ document.getElementById('sb').classList.toggle('active'); playSound(600, 0.05); }
+    function save(){ localStorage.setItem('DB_V15_USERS', JSON.stringify(USERS)); localStorage.setItem('DB_V15_SCRIPTS', JSON.stringify(SCRIPTS)); localStorage.setItem('DB_V15_STATS', JSON.stringify(STATS)); }
 
     function go(id){
-        if(id!=='v-auth' && id!=='v-creators' && !sess) return msg("⚠️ 請先登入", false);
+        if(id!=='v-auth' && id!=='v-creators' && !sess) return msg("ACCESS DENIED: LOGIN REQUIRED", 'err');
         document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         toggleMenu();
-        if(id==='v-copy') { drawS(); updateProfileUI(); }
+        if(id==='v-copy') drawS();
         if(id==='v-admin') drawStats();
     }
 
     function validate(str, isUser) {
-        const underscores = (str.match(/_/g) || []).length;
-        if(underscores !== 1) return "必須包含且只有一個底線(_)";
-        if(str.startsWith('_') || str.endsWith('_')) return "底線不能在開頭或結尾";
-        if(isUser && (str.length < 3 || str.length > 15)) return "長度須在 3-15 字";
-        if(!isUser && (str.length < 5 || str.length > 200)) return "長度須在 5-200 字";
+        const count = (str.match(/_/g) || []).length;
+        if(count !== 1) return "MUST HAVE EXACTLY ONE '_'";
+        if(str.startsWith('_') || str.endsWith('_')) return "CANNOT START/END WITH '_'";
+        if(isUser && (str.length<3 || str.length>15)) return "LENGTH 3-15 REQUIRED";
+        if(!isUser && (str.length<5 || str.length>50)) return "LENGTH 5-50 REQUIRED";
         return true;
     }
 
-    function setAuth(m){ mode = m; isReg = false; }
+    function setAuth(m){ mode = m; isReg = false; msg("MODE SWITCED: " + m.toUpperCase()); }
     function toggleReg(){ isReg = !isReg; document.getElementById('ipt-p2').style.display = isReg ? "block" : "none"; }
 
     function handleAuth(){
         const u = document.getElementById('ipt-u').value.trim();
         const p = document.getElementById('ipt-p').value.trim();
         const p2 = document.getElementById('ipt-p2').value.trim();
-        
-        document.getElementById('err-u').style.display = 'none';
-        document.getElementById('err-p').style.display = 'none';
 
         if(mode === 'admin'){
-            if(u === 'admin' && p === 'LEO_888'){ 
-                sess = {u:"管理員", role:"admin", pts:999, avatar:"👑"}; loginOk(); 
-            } else { msg("❌ 驗證失敗", false); }
+            if(u === 'admin' && p === 'LEO_888'){ sess = {u:"ADMIN_MATRIX", role:"admin", pts:999, avatar:"👑"}; loginOk(); }
+            else { msg("INVALID ENCRYPTION KEY", 'err'); }
             return;
         }
 
-        const vU = validate(u, true);
-        const vP = validate(p, false);
-
-        if(vU !== true){ const e=document.getElementById('err-u'); e.innerText=vU; e.style.display='block'; soundErr(); return; }
-        if(vP !== true){ const e=document.getElementById('err-p'); e.innerText=vP; e.style.display='block'; soundErr(); return; }
+        const vU = validate(u, true); const vP = validate(p, false);
+        if(vU !== true) return msg(vU, 'err'); if(vP !== true) return msg(vP, 'err');
 
         if(isReg){
-            if(p !== p2) return msg("❌ 兩次密碼不符", false);
-            if(USERS.find(x=>x.u === u)) return msg("❌ 名稱已重複", false);
-            // 新增：註冊時給予基本屬性
-            USERS.push({u, p, role:'user', pts:0, avatar:"👻", lastCheck:0}); save();
-            msg("✅ 註冊成功，請登入"); toggleReg();
-            addBroadcast(`歡迎新用戶 ${u} 加入了我們！`);
+            if(p !== p2) return msg("PASSWORDS DO NOT MATCH", 'err');
+            if(USERS.find(x=>x.u === u)) return msg("IDENTITY ALREADY EXISTS", 'err');
+            USERS.push({u, p, role:'user', pts:0, avatar:"🤖", lastCheck:0}); save();
+            msg("IDENTITY CREATED"); toggleReg();
         } else {
             const f = USERS.find(x=>x.u === u && x.p === p);
-            if(f){ 
-                sess = f; 
-                if(!sess.pts) sess.pts = 0; if(!sess.avatar) sess.avatar = "👻";
-                loginOk(); 
-            } else { msg("❌ 帳密錯誤", false); }
+            if(f){ sess = f; loginOk(); } else { msg("IDENTITY VERIFICATION FAILED", 'err'); }
         }
     }
 
-    function getLevel(pts) {
-        if(pts >= 100) return {n:"VIP", c:"badge-vip"};
-        if(pts >= 30) return {n:"高手", c:""};
-        return {n:"新手", c:""};
-    }
-
     function loginOk(){
-        let rank = getLevel(sess.pts);
-        document.getElementById('u-tag').innerText = sess.avatar + " " + sess.u;
-        let bdg = document.getElementById('u-badge');
-        bdg.innerText = rank.n;
-        bdg.className = "badge " + rank.c;
-        bdg.style.display = 'inline-block';
-
-        if(sess.role==='admin') document.getElementById('adm-nav').style.display='block';
-        msg("🔓 登入成功"); go('v-copy');
-    }
-
-    function updateProfileUI() {
-        if(!sess || sess.role === 'admin') return;
+        document.getElementById('my-name').innerText = sess.u;
         document.getElementById('my-avatar').innerText = sess.avatar;
         document.getElementById('my-pts').innerText = sess.pts;
+        if(sess.role==='admin') document.getElementById('adm-nav').style.display='block';
+        msg("DECRYPTED: WELCOME BACK"); go('v-copy');
     }
 
     function checkIn() {
-        if(sess.role === 'admin') return msg("管理員不需簽到！", false);
-        let today = new Date().toDateString();
-        if(sess.lastCheck === today) return msg("❌ 今天已經簽到過了哦！", false);
-        
-        sess.pts += 10;
-        sess.lastCheck = today;
-        let idx = USERS.findIndex(x=>x.u === sess.u);
-        if(idx !== -1) USERS[idx] = sess;
-        save();
-        updateProfileUI();
-        loginOk(); // 更新稱號
-        msg("🎁 簽到成功！積分 +10");
-        addBroadcast(`${sess.u} 完成了每日簽到！`);
-    }
-
-    function setAvatar(emoji) {
-        if(sess.role === 'admin') return;
-        sess.avatar = emoji;
-        let idx = USERS.findIndex(x=>x.u === sess.u);
-        if(idx !== -1) USERS[idx] = sess;
-        save();
-        updateProfileUI();
-        loginOk(); // 更新頭部
-        msg("🖼️ 頭像更換成功！");
+        let d = new Date().toDateString();
+        if(sess.lastCheck === d) return msg("ALREADY SYNCED TODAY", 'err');
+        sess.pts += 20; sess.lastCheck = d;
+        let idx = USERS.findIndex(x=>x.u === sess.u); USERS[idx] = sess; save();
+        document.getElementById('my-pts').innerText = sess.pts;
+        msg("SYNC SUCCESS: +20 PTS");
     }
 
     function drawStats(){
@@ -347,39 +305,28 @@
     }
 
     function drawS(){
-        // 按愛心數量排序
-        SCRIPTS.sort((a,b)=>(b.likes || 0) - (a.likes || 0));
         document.getElementById('s-list').innerHTML = SCRIPTS.map((s,i)=>`
-            <div class="glass" style="padding:15px; margin-bottom:10px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <b>${s.n} <span style="font-size:10px; color:var(--admin-red);">❤️ ${s.likes || 0}</span></b>
+            <div class="glass" style="padding:20px; margin-bottom:15px;">
+                <div style="display:flex; justify-content:space-between;">
+                    <b style="color:var(--primary); font-family:monospace;">> ${s.n}</b>
+                    <span style="font-size:12px; color:var(--admin-red);">❤️ ${s.likes || 0}</span>
                 </div>
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="btn" style="padding:8px; margin:0; background:rgba(255,77,77,0.2); color:var(--admin-red);" onclick="likeS(${i})">❤️ 按讚</button>
-                    <button class="btn" style="padding:8px; margin:0;" onclick="copyS('${btoa(s.c)}', '${s.n}')">📋 複製</button>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button class="btn" style="background:rgba(0,255,204,0.1); color:var(--primary);" onclick="copyS('${btoa(s.c)}')">DOWNLOAD_CODE</button>
                 </div>
             </div>
         `).join('');
     }
 
-    function likeS(idx) {
-        if(!SCRIPTS[idx].likes) SCRIPTS[idx].likes = 0;
-        SCRIPTS[idx].likes += 1;
-        save(); drawS(); msg("❤️ 感謝你的按讚！");
-    }
-
-    function copyS(b, name){ 
+    function copyS(b){ 
         navigator.clipboard.writeText(atob(b)); 
-        STATS.s++; save(); 
-        msg("📋 複製成功"); 
-        addBroadcast(`${sess.u} 剛剛複製了 ${name} 腳本！`);
+        STATS.s++; save(); msg("CODE STREAM COPIED");
+        playSound(1200, 0.1, 'sine', 0.05);
     }
-
+    
     function addS(){ 
         const n=document.getElementById('ad-n').value, c=document.getElementById('ad-c').value; 
-        SCRIPTS.push({n, c, likes:0}); save(); 
-        msg("✅ 已發布"); drawStats(); 
-        addBroadcast(`管理員發布了新腳本：${n}！`);
+        SCRIPTS.push({n, c, likes:0}); save(); msg("ASSET DEPLOYED"); drawStats(); 
     }
 </script>
 </body>
