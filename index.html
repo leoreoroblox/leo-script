@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KG System - Security Pro</title>
     <style>
-        :root { --main: #00ffcc; --bg: #0d0d0d; --card: #151515; --red: #ff4d4d; }
+        :root { --main: #00ffcc; --bg: #0d0d0d; --card: #151515; --red: #ff4d4d; --gold: #ffcc00; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { margin: 0; background: var(--bg); color: #fff; overflow: hidden; height: 100vh; }
 
-        /* 導航 */
+        /* 側邊導航 */
         .sidebar { position: fixed; left: -260px; top: 0; width: 250px; height: 100%; background: #050505; z-index: 1000; border-right: 1px solid #222; transition: 0.3s; padding-top: 60px; }
         .sidebar.open { left: 0; box-shadow: 10px 0 30px #000; }
         .menu-item { padding: 15px 20px; border-bottom: 1px solid #111; cursor: pointer; color: #aaa; }
@@ -18,141 +18,152 @@
         .view { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
         .view.active { display: flex; z-index: 10; }
 
-        /* 卡片 */
-        .card { background: var(--card); border: 1px solid #333; border-radius: 20px; padding: 25px; width: 100%; max-width: 360px; text-align: center; }
-        input { width: 100%; padding: 12px; background: #000; border: 1px solid #444; border-radius: 10px; color: #fff; margin-bottom: 10px; text-align: center; outline: none; }
+        /* 卡片與輸入框 */
+        .card { background: var(--card); border: 1px solid #333; border-radius: 20px; padding: 25px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input { width: 100%; padding: 12px; background: #000; border: 1px solid #444; border-radius: 10px; color: #fff; margin-bottom: 10px; text-align: center; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--main); }
         
-        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--main); color: #000; font-weight: bold; cursor: pointer; }
-        .btn-admin { background: #ffcc00; margin-top: 15px; }
+        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--main); color: #000; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn:active { transform: scale(0.96); }
         
-        .user-list { text-align: left; background: #000; padding: 10px; border-radius: 10px; margin-top: 10px; font-size: 12px; height: 150px; overflow-y: auto; }
-        .user-item { border-bottom: 1px solid #222; padding: 5px 0; color: #ccc; }
-        .lock-msg { color: var(--red); font-size: 12px; margin-top: 10px; font-weight: bold; }
+        .btn-admin-gate { background: none; border: 1px solid #333; color: #555; margin-top: 15px; font-size: 12px; padding: 8px; }
+        .btn-gold { background: var(--gold); color: #000; }
+        
+        .user-list { text-align: left; background: #000; padding: 10px; border-radius: 10px; margin-top: 10px; font-size: 12px; height: 180px; overflow-y: auto; border: 1px solid #222; }
+        .user-item { border-bottom: 1px solid #222; padding: 8px 0; color: #ccc; }
+        .lock-msg { color: var(--red); font-size: 12px; margin-bottom: 10px; font-weight: bold; background: rgba(255,77,77,0.1); padding: 8px; border-radius: 5px; }
+        .link { color: var(--main); font-size: 12px; cursor: pointer; margin-top: 15px; display: inline-block; }
     </style>
 </head>
 <body>
 
 <div class="menu-btn" onclick="toggleM()">☰</div>
 <div class="sidebar" id="sidebar">
-    <div class="menu-item" onclick="go('v-auth')">🏠 帳號系統</div>
-    <div class="menu-item" onclick="go('v-log')">📅 更新日誌</div>
+    <div class="menu-item" onclick="go('v-auth')">🏠 返回登入</div>
+    <div class="menu-item" onclick="alert('請先登入管理員')">📅 系統日誌</div>
 </div>
 
 <div id="app-container">
     <div id="v-auth" class="view active">
         <div class="card" id="box-login">
-            <h2 style="color:var(--main); margin:0 0 15px 0;">KG LOGIN</h2>
-            <div id="lock-notice" class="lock-msg" style="display:none"></div>
+            <h2 style="color:var(--main); margin:0 0 20px 0;">KG LOGIN</h2>
             <input type="text" id="l-user" placeholder="使用者名稱">
             <input type="password" id="l-pwd" placeholder="密碼">
-            <button class="btn" onclick="doLogin()">進入系統</button>
-            <button class="btn btn-admin" onclick="openAdmin()">⚙️ 管理員後台</button>
-            <p style="font-size:12px; color:#555; margin-top:10px;">註冊功能已在後台管理</p>
+            <button class="btn" onclick="doUserLogin()">進入系統</button>
+            <span class="link" onclick="switchBox('box-reg')">還沒有帳號？點此註冊</span>
+            <button class="btn-admin-gate" onclick="switchBox('box-admin-login')">⚙️ 管理員登入入口</button>
         </div>
 
-        <div class="card" id="box-admin" style="display:none">
-            <h2 style="color:#ffcc00; margin:0 0 10px 0;">ADMIN PANEL</h2>
+        <div class="card" id="box-reg" style="display:none">
+            <h2 style="color:var(--main); margin:0 0 15px 0;">REGISTER</h2>
+            <input type="text" id="r-user" placeholder="設定帳號">
+            <input type="password" id="r-pwd" placeholder="設定密碼">
+            <button class="btn" onclick="doReg()">立即註冊</button>
+            <span class="link" onclick="switchBox('box-login')">返回登入</span>
+        </div>
+
+        <div class="card" id="box-admin-login" style="display:none; border-color: var(--gold);">
+            <h2 style="color:var(--gold); margin:0 0 10px 0;">ADMIN LOGIN</h2>
+            <div id="lock-notice" class="lock-msg" style="display:none"></div>
+            <p style="font-size:11px; color:#666; margin-bottom:15px;">警告：密碼錯誤兩次將執行數據抹除並封鎖裝置</p>
+            <input type="text" id="a-user" placeholder="管理員帳號" style="border-color:#554400">
+            <input type="password" id="a-pwd" placeholder="管理員密碼" style="border-color:#554400">
+            <button class="btn btn-gold" onclick="doAdminLogin()">驗證身分</button>
+            <span class="link" onclick="switchBox('box-login')" style="color:#666">返回普通登入</span>
+        </div>
+
+        <div class="card" id="box-admin-panel" style="display:none; max-width: 400px;">
+            <h2 style="color:var(--gold); margin:0 0 10px 0;">CONTROL CENTER</h2>
             <div id="admin-user-list" class="user-list"></div>
-            <button class="btn" onclick="switchBox('box-login')" style="background:#444; color:#fff; margin-top:15px;">退出管理</button>
+            <button class="btn" onclick="location.reload()" style="background:#333; color:#fff; margin-top:15px;">安全登出</button>
         </div>
     </div>
-    <div id="v-log" class="view"><div class="card"><h3>更新日誌</h3><p>管理員安全加固：2次錯誤封鎖 + 裝置鎖定。</p></div></div>
 </div>
 
 <script>
-    // 初始化數據
     let users = JSON.parse(localStorage.getItem('kg_u')) || [];
     let adminStats = JSON.parse(localStorage.getItem('kg_admin_stats')) || { fail: 0, lockUntil: 0, authDevice: null };
     
-    // 生成當前裝置唯一 ID
     const getDeviceId = () => {
-        let id = localStorage.getItem('kg_device_id');
-        if(!id) { id = 'DEV-' + Math.random().toString(36).substr(2, 9); localStorage.setItem('kg_device_id', id); }
+        let id = localStorage.getItem('kg_device_id') || 'DEV-' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('kg_device_id', id);
         return id;
     };
     const myId = getDeviceId();
 
     function checkLock() {
         if (Date.now() < adminStats.lockUntil) {
-            const daysLeft = Math.ceil((adminStats.lockUntil - Date.now()) / (1000 * 60 * 60 * 24));
-            document.getElementById('lock-notice').innerText = `管理功能封鎖中，剩餘 ${daysLeft} 天`;
+            const hours = Math.ceil((adminStats.lockUntil - Date.now()) / (1000 * 60 * 60));
+            const msg = `管理功能封鎖中，剩餘約 ${Math.ceil(hours/24)} 天`;
+            document.getElementById('lock-notice').innerText = msg;
             document.getElementById('lock-notice').style.display = 'block';
             return true;
         }
         return false;
     }
 
-    function doLogin() {
+    function doUserLogin() {
         const u = document.getElementById('l-user').value;
         const p = document.getElementById('l-pwd').value;
+        if(users.find(x => x.name === u && x.pwd === p)) alert("登入成功！");
+        else alert("帳號或密碼錯誤");
+    }
 
-        if (u === "admin") {
-            if (checkLock()) return;
+    function doAdminLogin() {
+        if (checkLock()) return;
+        const u = document.getElementById('a-user').value;
+        const p = document.getElementById('a-pwd').value;
 
-            // 管理員驗證邏輯
-            if (p === "KGscriptWEB:admin") {
-                // 檢查裝置鎖定
-                if (adminStats.authDevice && adminStats.authDevice !== myId) {
-                    return alert("登入失敗：管理員權限已鎖定在其他裝置。");
-                }
-                
-                // 首次登入鎖定裝置
-                if (!adminStats.authDevice) adminStats.authDevice = myId;
-                
-                adminStats.fail = 0;
-                saveStats();
-                alert("管理員登入成功！");
-                switchBox('box-admin');
-            } else {
-                adminStats.fail++;
-                if (adminStats.fail >= 2) {
-                    // 執行封鎖與數據刪除
-                    adminStats.lockUntil = Date.now() + (30 * 24 * 60 * 60 * 1000);
-                    users = [];
-                    localStorage.removeItem('kg_u');
-                    saveStats();
-                    alert("管理員密碼錯誤兩次！系統已封鎖 30 天並刪除所有數據。");
-                    location.reload();
-                } else {
-                    saveStats();
-                    alert(`管理員密碼錯誤！剩餘 1 次機會，否則將封鎖並刪除數據。`);
-                }
-            }
+        // 裝置唯一性檢查
+        if (adminStats.authDevice && adminStats.authDevice !== myId) {
+            return alert("授權失敗：此帳號已在其他裝置鎖定。");
+        }
+
+        if (u === "admin" && p === "KGscriptWEB:admin") {
+            if (!adminStats.authDevice) adminStats.authDevice = myId;
+            adminStats.fail = 0;
+            saveStats();
+            alert("管理員身分確認成功！");
+            switchBox('box-admin-panel');
         } else {
-            // 普通用戶登入
-            const found = users.find(x => x.name === u && x.pwd === p);
-            if(found) alert("登入成功！"); else alert("帳密錯誤");
+            adminStats.fail++;
+            if (adminStats.fail >= 2) {
+                adminStats.lockUntil = Date.now() + (30 * 24 * 60 * 60 * 1000);
+                users = []; // 刪除所有數據
+                localStorage.removeItem('kg_u');
+                saveStats();
+                alert("危險：密碼連續錯誤！數據已全數刪除，功能封鎖 30 天。");
+                location.reload();
+            } else {
+                saveStats();
+                alert("密碼錯誤！剩餘最後 1 次機會。");
+            }
         }
     }
 
-    function openAdmin() {
-        if (checkLock()) return;
-        if (adminStats.authDevice && adminStats.authDevice !== myId) {
-            return alert("此裝置無管理權限。");
-        }
-        switchBox('box-admin');
+    function doReg() {
+        const u = document.getElementById('r-user').value;
+        const p = document.getElementById('r-pwd').value;
+        if (u.length < 3 || p.length < 5) return alert("格式過短");
+        if (users.find(x => x.name === u)) return alert("帳號已存在");
+        users.push({name:u, pwd:p});
+        localStorage.setItem('kg_u', JSON.stringify(users));
+        alert("註冊成功！"); switchBox('box-login');
     }
 
     function refreshAdminList() {
         const listDiv = document.getElementById('admin-user-list');
         listDiv.innerHTML = users.length ? users.map(u => `
-            <div class="user-item">帳號: <b>${u.name}</b> | 密碼: <span style="color:var(--red)">${u.pwd}</span></div>
-        `).join('') : "<center>無使用者資料</center>";
+            <div class="user-item">👤 帳號: <b>${u.name}</b><br>🔑 密碼: <span style="color:var(--red)">${u.pwd}</span></div>
+        `).join('') : "<center style='color:#444;margin-top:70px;'>暫無使用者數據</center>";
     }
 
     function saveStats() { localStorage.setItem('kg_admin_stats', JSON.stringify(adminStats)); }
 
     function switchBox(id) {
-        ['box-login','box-admin'].forEach(b => document.getElementById(b).style.display='none');
+        ['box-login','box-reg','box-admin-login','box-admin-panel'].forEach(b => document.getElementById(b).style.display='none');
         document.getElementById(id).style.display='block';
-        if(id === 'box-admin') refreshAdminList();
-    }
-
-    function go(id) {
-        document.getElementById('v-auth').classList.remove('active');
-        document.getElementById('v-log').classList.remove('active');
-        document.getElementById(id).classList.add('active');
-        toggleM(false);
+        if(id === 'box-admin-panel') refreshAdminList();
     }
 
     function toggleM(f) {
