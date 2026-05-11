@@ -1,198 +1,104 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>雷歐腳本 | LEO SCRIPT HUB</title>
+    <title>雷歐腳本</title>
     <style>
-        :root {
-            --bg: #000; --card: #0a0a0a; --input: #121212; --border: #1c1c1c;
-            --main: #00ffcc; --main-dim: rgba(0, 255, 204, 0.1);
-            --red: #ff3b30; --red-dim: rgba(255, 59, 48, 0.1);
-            --gold: #ffcc00; --text: #fff; --sub: #666;
-        }
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
+        /* 載入動畫 */
+        #ld { position: fixed; inset: 0; background: #000; z-index: 9; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        #pg { width: 200px; height: 4px; background: #1a1a1a; border-radius: 2px; margin: 20px; overflow: hidden; }
+        #pb { width: 0%; height: 100%; background: #0fc; box-shadow: 0 0 10px #0fc; transition: 0.1s; }
+        
+        .hd { position: fixed; top: 0; width: 100%; height: 50px; background: rgba(0,0,0,0.8); display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid #1a1a1a; z-index: 5; }
+        .sb { position: fixed; left: -250px; top: 0; width: 240px; height: 100%; background: #050505; transition: 0.3s; padding-top: 60px; border-right: 1px solid #1a1a1a; z-index: 8; }
+        .sb.on { left: 0; }
+        .ni { padding: 15px 25px; cursor: pointer; color: #aaa; font-size: 14px; }
+        .ni.act { color: #0fc; background: rgba(0,255,204,0.1); }
 
-        * { box-sizing: border-box; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
-
-        /* 載入動畫與進度條 */
-        #loader { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .loader-logo { font-size: 24px; font-weight: 900; color: var(--main); margin-bottom: 20px; letter-spacing: 4px; }
-        .progress-container { width: 200px; height: 4px; background: #1a1a1a; border-radius: 10px; overflow: hidden; position: relative; }
-        .progress-bar { width: 0%; height: 100%; background: var(--main); box-shadow: 0 0 10px var(--main); transition: width 0.1s; }
-        .progress-text { margin-top: 10px; font-size: 12px; color: var(--sub); font-family: monospace; }
-
-        /* 導航頭部 */
-        .header { position: fixed; top: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 1000; display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid var(--border); }
-        .menu-btn { cursor: pointer; background: var(--card); border: 1px solid var(--border); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
-
-        /* 側邊欄 */
-        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #050505; z-index: 2000; border-right: 1px solid var(--border); transition: 0.3s; padding-top: 80px; }
-        .sidebar.open { left: 0; box-shadow: 10px 0 30px #000; }
-        .nav-item { padding: 15px 25px; cursor: pointer; color: #ccc; display: flex; align-items: center; gap: 12px; font-size: 14px; transition: 0.2s; }
-        .nav-item.active { background: var(--main-dim); color: var(--main); border-radius: 0 15px 15px 0; margin-right: 10px; }
-
-        /* 視圖切換 */
-        .view { position: absolute; inset: 0; display: none; padding: 80px 20px 30px; overflow-y: auto; }
-        .view.active { display: flex; flex-direction: column; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .container { width: 100%; max-width: 450px; margin: 0 auto; }
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 22px; margin-bottom: 15px; }
-
-        /* 腳本卡片 */
-        .script-card { display: flex; justify-content: space-between; align-items: center; background: #0d0d0d; border: 1px solid var(--border); padding: 15px 20px; border-radius: 18px; margin-bottom: 12px; }
-        .btn-get { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); padding: 6px 16px; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; }
-
-        /* UI 組件 */
-        input { width: 100%; padding: 15px; background: var(--input); border: 1px solid var(--border); border-radius: 12px; color: #fff; margin-bottom: 12px; outline: none; }
-        .btn-main { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--main); color: #000; font-weight: bold; cursor: pointer; }
-
-        /* 彈窗 */
-        #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 3000; padding: 20px; align-items: center; justify-content: center; }
-        .modal-content { background: var(--card); border: 1px solid var(--border); width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; text-align: center; }
-        .code-area { background: #000; padding: 15px; border-radius: 12px; color: #0f0; font-family: monospace; font-size: 11px; word-break: break-all; margin: 15px 0; border: 1px dashed #333; text-align: left; max-height: 200px; overflow-y: auto; }
+        .vw { display: none; padding: 70px 20px; height: 100vh; overflow-y: auto; }
+        .vw.act { display: block; }
+        .cd { background: #0a0a0a; border: 1px solid #1c1c1c; border-radius: 15px; padding: 20px; margin-bottom: 15px; }
+        
+        input { width: 100%; padding: 12px; background: #121212; border: 1px solid #1c1c1c; border-radius: 10px; color: #fff; margin-bottom: 10px; }
+        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
+        .b-m { background: #0fc; color: #000; }
+        
+        .s-cd { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #1a1a1a; }
+        .b-g { color: #f33; border: 1px solid #f33; background: none; padding: 5px 12px; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="loader">
-    <div class="loader-logo">LEO SCRIPT</div>
-    <div class="progress-container">
-        <div class="progress-bar" id="p-bar"></div>
-    </div>
-    <div class="progress-text" id="p-text">Loading 0%</div>
+<div id="ld">
+    <div style="color:#0fc; font-weight:900; letter-spacing:3px;">LEO SCRIPT</div>
+    <div id="pg"><div id="pb"></div></div>
+    <div id="pt" style="font-size:12px; color:#666;">0%</div>
 </div>
 
-<div class="header">
-    <div class="menu-btn" onclick="toggleM()">☰</div>
-    <div style="margin-left: 15px; font-weight: 900; letter-spacing: 1px; color: var(--main);">雷歐腳本</div>
+<div class="hd">
+    <div onclick="tk()" style="cursor:pointer;">☰</div>
+    <div style="margin-left:15px; color:#0fc; font-weight:bold;">雷歐腳本</div>
 </div>
 
-<div class="sidebar" id="sidebar">
-    <div class="nav-item active" onclick="nav('v-home')">📢 系統公告</div>
-    <div class="nav-item" onclick="nav('v-script')">📜 腳本功能</div>
-    <div class="nav-item" onclick="nav('v-demo')">📺 腳本演示</div>
-    <div class="nav-item" onclick="nav('v-logs')">🕒 更新日誌</div>
-    <div class="nav-item" onclick="nav('v-author')">👨‍💻 創作者</div>
-    <div class="nav-item" onclick="nav('v-others')">🔗 其他腳本</div>
-    <div class="nav-item" onclick="nav('v-donate')" style="color:var(--gold)">💰 支持一下</div>
-    <div class="nav-item" onclick="nav('v-admin')" style="margin-top:20px; border-top:1px solid #111; padding-top:20px;">⚙️ 管理中心</div>
+<div class="sb" id="sb">
+    <div class="ni act" onclick="nv('v1')">📢 系統公告</div>
+    <div class="ni" onclick="nv('v2')">🔗 其他腳本</div>
+    <div class="ni" onclick="nv('v3')">👨‍💻 創作者</div>
 </div>
 
-<div id="app">
-    <div id="v-home" class="view active">
-        <div class="container">
-            <div class="card">
-                <h2 style="margin-top:0;">雷歐登入</h2>
-                <p style="color:var(--sub); font-size:12px; margin-bottom:20px;">請登入以使用雷歐腳本服務</p>
-                <input type="text" id="u" placeholder="用戶名稱">
-                <input type="password" id="p" placeholder="帳戶密碼">
-                <button class="btn-main" onclick="doLogin()">登入系統</button>
-            </div>
-        </div>
+<div id="v1" class="vw act">
+    <div class="cd">
+        <h2>雷歐登入</h2>
+        <input type="text" id="u" placeholder="用戶名">
+        <button class="btn b-m" onclick="lg()">登入</button>
     </div>
-
-    <div id="v-others" class="view">
-        <div class="container">
-            <h3 style="margin-bottom:20px;">第三方腳本推薦</h3>
-            <div id="script-list"></div>
-        </div>
-    </div>
-
-    <div id="v-script" class="view"><div class="container"><div class="card"><h3>核心功能</h3><p>自動掛機、ESP、TP 等功能已準備就緒。</p></div></div></div>
-    <div id="v-author" class="view"><div class="container"><div class="card" style="text-align:center;"><h3>創作者：雷歐 REO</h3><p>致力於提供最穩定的腳本環境</p></div></div></div>
-    <div id="v-logs" class="view"><div class="container"><div class="card"><h3>更新日誌</h3><p>v2.9.1 - 加入雷歐主題與進度載入動畫</p></div></div></div>
-    <div id="v-demo" class="view"><div class="container"><div class="card"><h3>功能演示視頻</h3></div></div></div>
-    <div id="v-donate" class="view"><div class="container"><div class="card"><h3>支持一下</h3></div></div></div>
-    <div id="v-admin" class="view"><div class="container"><div class="card"><h3>管理中心</h3></div></div></div>
 </div>
 
-<div id="modal" onclick="closeM()">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 id="m-title">代碼詳情</h3>
-        <div class="code-area" id="m-code"></div>
-        <button class="btn-main" onclick="copyM()">一鍵複製</button>
-        <button class="btn-main" style="background:#1a1a1a; color:#888; margin-top:10px;" onclick="closeM()">返回</button>
-    </div>
+<div id="v2" class="vw">
+    <div class="cd" id="sl"></div>
+</div>
+
+<div id="v3" class="vw">
+    <div class="cd"><h3>創作者：雷歐 REO</h3></div>
 </div>
 
 <script>
-    // 腳本數據庫
-    const scripts = [
-        { name: "墨水遊戲漢化防風", desc: "高效漢化載入器", code: `loadstring(game:HttpGet("https://raw.githubusercontent.com/hdjsjjdgrhj/script-hub/refs/heads/main/Ringta"))()` },
-        { name: "最新皮腳本", desc: "QQ群: 1002100032", code: `getgenv().XiaoPi="皮脚本QQ群1002100032" loadstring(game:HttpGet("https://raw.githubusercontent.com/xiaopi77/xiaopi77/main/QQ1002100032-Roblox-Pi-script.lua"))()` },
-        { name: "縫合脚本 (TX-Pro)", desc: "全部複製，包括註釋", code: `SCRIPT = "脚本群:160369111"TX = "免费"loadstring(game:HttpGet("https://raw.githubusercontent.com/JsYb666/TX-Free-YYDS/refs/heads/main/TX-Pro-Free"))()` },
-        { name: "被遺棄腳本", desc: "By JackUltraman", code: `loadstring(game:HttpGet("https://raw.githubusercontent.com/JackUltraman/fish/refs/heads/main/%E8%A2%AB%E9%81%97%E5%BC%83"))()` },
-        { name: "死鐵鬼腳本", desc: "ThanHub V1", code: `loadstring(game:HttpGet("https://raw.githubusercontent.com/thantzy/thanhub/refs/heads/main/thanv1"))()` },
-        { name: "葉脚本", desc: "VIP 專屬功能", code: `loadstring(game:HttpGet("https://raw.githubusercontent.com/roblox-ye/QQ515966991/refs/heads/main/ROBLOX-CNVIP-XIAOYE.lua"))()` }
+    const sc = [
+        { n: "墨水遊戲", c: `loadstring(game:HttpGet("https://raw.githubusercontent.com/hdjsjjdgrhj/script-hub/refs/heads/main/Ringta"))()` },
+        { n: "最新皮腳本", c: `getgenv().XiaoPi="皮脚本QQ群1002100032" loadstring(game:HttpGet("https://raw.githubusercontent.com/xiaopi77/xiaopi77/main/QQ1002100032-Roblox-Pi-script.lua"))()` },
+        { n: "縫合脚本", c: `loadstring(game:HttpGet("https://raw.githubusercontent.com/JsYb666/TX-Free-YYDS/refs/heads/main/TX-Pro-Free"))()` },
+        { n: "被遺棄", c: `loadstring(game:HttpGet("https://raw.githubusercontent.com/JackUltraman/fish/refs/heads/main/%E8%A2%AB%E9%81%97%E5%BC%83"))()` },
+        { n: "死鐵鬼", c: `loadstring(game:HttpGet("https://raw.githubusercontent.com/thantzy/thanhub/refs/heads/main/thanv1"))()` },
+        { n: "葉脚本", c: `loadstring(game:HttpGet("https://raw.githubusercontent.com/roblox-ye/QQ515966991/refs/heads/main/ROBLOX-CNVIP-XIAOYE.lua"))()` }
     ];
 
-    // 初始化加載動畫邏輯
-    function startLoading() {
-        let progress = 0;
-        const bar = document.getElementById('p-bar');
-        const text = document.getElementById('p-text');
-        
-        const interval = setInterval(() => {
-            progress += Math.floor(Math.random() * 15) + 5;
-            if (progress >= 100) {
-                progress = 100;
-                clearInterval(interval);
-                setTimeout(() => {
-                    document.getElementById('loader').style.display = 'none';
-                }, 500);
-            }
-            bar.style.width = progress + '%';
-            text.innerText = `Loading ${progress}%`;
-        }, 150);
+    function tk() { document.getElementById('sb').classList.toggle('on'); }
+    function nv(id) {
+        document.querySelectorAll('.vw').forEach(v => v.classList.remove('act'));
+        document.getElementById(id).classList.add('act');
+        tk();
     }
 
-    // 導航邏輯
-    function nav(id) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        event.currentTarget.classList.add('active');
-        toggleM(false);
-    }
-
-    function toggleM(force) {
-        const s = document.getElementById('sidebar');
-        if(force === false) s.classList.remove('open');
-        else s.classList.toggle('open');
-    }
-
-    // 渲染腳本列表
-    function renderScripts() {
-        const list = document.getElementById('script-list');
-        list.innerHTML = scripts.map((s, i) => `
-            <div class="script-card">
-                <div><b>${s.name}</b><br><small style="color:#555">${s.desc}</small></div>
-                <button class="btn-get" onclick="showC(${i})">獲取</button>
-            </div>
-        `).join('');
-    }
-
-    function showC(index) {
-        document.getElementById('m-code').innerText = scripts[index].code;
-        document.getElementById('m-title').innerText = scripts[index].name;
-        document.getElementById('modal').style.display = 'flex';
-    }
-
-    function closeM() { document.getElementById('modal').style.display = 'none'; }
-    function copyM() { navigator.clipboard.writeText(document.getElementById('m-code').innerText); alert("雷歐腳本：代碼已複製！"); }
-
-    function doLogin() {
-        if(document.getElementById('u').value !== "") {
-            alert("雷歐腳本：登入成功！");
-            nav('v-others');
-        } else alert("請輸入用戶名");
-    }
+    function lg() { alert("登入成功"); nv('v2'); }
+    function cp(i) { navigator.clipboard.writeText(sc[i].c); alert("複製成功"); }
 
     window.onload = () => {
-        renderScripts();
-        startLoading(); // 啟動帶進度條的載入動畫
+        let p = 0;
+        const i = setInterval(() => {
+            p += 10;
+            document.getElementById('pb').style.width = p + '%';
+            document.getElementById('pt').innerText = p + '%';
+            if (p >= 100) { clearInterval(i); setTimeout(() => document.getElementById('ld').style.display='none', 300); }
+        }, 100);
+
+        document.getElementById('sl').innerHTML = sc.map((s, i) => `
+            <div class="s-cd">
+                <span>${s.n}</span>
+                <button class="b-g" onclick="cp(${i})">獲取</button>
+            </div>
+        `).join('');
     };
 </script>
 </body>
