@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LEO HUB | FINAL V12.8</title>
+    <title>LEO HUB | SUPER V13</title>
     <style>
         :root { --primary: #00ffcc; --bg: #050505; --glass: rgba(255,255,255,0.03); --admin-red: #ff4d4d; --gold: #ffd700; }
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; color: #fff; background: #000; }
+        /* 1. 專屬滑鼠游標 */
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; color: #fff; background: #000; cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%2300ffcc" d="M7 2l12 11.2-5.8.5 3.3 7.3-2.2 1-3.2-7.4-4.4 4.8z"/></svg>'), auto; }
         
+        button, .nav-item, p { cursor: pointer; }
+
         /* 加載動畫 */
         #loader { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.8s; }
         .spinner { width: 60px; height: 60px; border: 4px solid rgba(0,255,204,0.1); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s infinite; }
@@ -15,29 +18,44 @@
 
         /* UI 元件 */
         .glass { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; }
-        .btn { background: var(--primary); color: #000; padding: 12px; border-radius: 12px; border: none; font-weight: 900; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn { background: var(--primary); color: #000; padding: 12px; border-radius: 12px; border: none; font-weight: 900; width: 100%; margin-top: 10px; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
         input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.6); color: #fff; box-sizing: border-box; outline: none; }
         .error-msg { color: var(--admin-red); font-size: 11px; text-align: left; display: none; margin-bottom: 10px; }
 
-        /* 導航 */
+        /* 導航與跑馬燈 */
         .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; align-items: center; padding: 0 20px; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.8); }
-        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; padding-top: 80px; transition: 0.4s; z-index: 200; background: #080808; border-right: 1px solid var(--primary); }
+        
+        /* 2. 全服跑馬燈廣播 */
+        .marquee-box { position: fixed; top: 60px; width: 100%; background: rgba(0,255,204,0.15); color: var(--primary); font-size: 12px; padding: 6px 0; overflow: hidden; white-space: nowrap; z-index: 99; border-bottom: 1px solid rgba(0,255,204,0.3); font-weight: bold; }
+        .marquee { display: inline-block; animation: scrollText 15s linear infinite; }
+        @keyframes scrollText { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+
+        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; padding-top: 100px; transition: 0.4s; z-index: 200; background: #080808; border-right: 1px solid var(--primary); }
         .sidebar.active { left: 0; }
-        .nav-item { padding: 15px 25px; cursor: pointer; opacity: 0.7; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .nav-item { padding: 15px 25px; opacity: 0.7; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .nav-item.active { opacity: 1; color: var(--primary); background: rgba(0,255,204,0.1); }
 
         /* 視圖 */
-        .view { display: none; padding: 80px 20px; height: 100vh; overflow-y: auto; box-sizing: border-box; }
+        .view { display: none; padding: 100px 20px 40px; height: 100vh; overflow-y: auto; box-sizing: border-box; }
         .view.active { display: block; animation: fadeIn 0.4s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 管理員數據統計表 */
+        /* 數據統計 */
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .stat-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; text-align: center; }
         .stat-val { font-size: 22px; font-weight: 900; color: var(--primary); }
         .stat-label { font-size: 10px; opacity: 0.5; }
 
+        /* 3. 等級徽章 */
+        .badge { background: var(--primary); color: #000; padding: 2px 6px; border-radius: 5px; font-size: 9px; font-weight: bold; margin-left: 5px; }
+        .badge-vip { background: var(--gold); }
+        
         #toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; padding: 12px 30px; border-radius: 50px; font-weight: bold; transition: 0.4s; z-index: 9999; }
+        
+        /* 頭像選擇 */
+        .avatar-btn { font-size: 24px; background: none; border: none; cursor: pointer; transition: 0.2s; }
+        .avatar-btn:hover { transform: scale(1.2); }
     </style>
 </head>
 <body onload="init()">
@@ -48,13 +66,20 @@
 </div>
 
 <header class="header">
-    <div onclick="toggleMenu()" style="cursor:pointer; font-size:24px;">☰</div>
-    <div style="margin-left:20px; font-weight:900;">LEO HUB <span id="u-tag" style="font-size:10px; opacity:0.3;">GUEST</span></div>
+    <div onclick="toggleMenu()" style="font-size:24px;">☰</div>
+    <div style="margin-left:20px; font-weight:900;">LEO HUB 
+        <span id="u-tag" style="font-size:12px; opacity:0.8; margin-left:10px;">👻 訪客</span>
+        <span id="u-badge" class="badge" style="display:none;">新手</span>
+    </div>
 </header>
+
+<div class="marquee-box">
+    <div class="marquee" id="mq-text">📢 歡迎來到 LEO HUB！目前系統穩定運行中...</div>
+</div>
 
 <aside class="sidebar" id="sb">
     <div class="nav-item active" onclick="go('v-auth')">🔐 帳戶驗證</div>
-    <div class="nav-item" onclick="go('v-copy')">📋 腳本複製</div>
+    <div class="nav-item" onclick="go('v-copy')">📋 腳本大廳</div>
     <div class="nav-item" onclick="go('v-creators')">👥 創作者名單</div>
     <div class="nav-item" onclick="go('v-admin')" id="adm-nav" style="display:none; color:var(--admin-red);">⚙️ 管理後台</div>
     <div class="nav-item" onclick="location.reload()" style="opacity:0.3; margin-top:20px;">🚪 退出登入</div>
@@ -79,12 +104,31 @@
             <input type="password" id="ipt-p2" placeholder="確認密碼" style="display:none;">
             
             <button class="btn" onclick="handleAuth()" id="main-btn">確認</button>
-            <p id="sw-text" onclick="toggleReg()" style="text-align:center; font-size:12px; color:var(--primary); cursor:pointer; margin-top:20px;">點此註冊</p>
+            <p id="sw-text" onclick="toggleReg()" style="text-align:center; font-size:12px; color:var(--primary); margin-top:20px;">點此註冊</p>
         </div>
     </div>
 
     <div id="v-copy" class="view">
-        <div id="s-list" style="max-width:600px; margin:auto;"></div>
+        <div style="max-width:600px; margin:auto;">
+            <div class="glass" style="padding:20px; margin-bottom:20px; text-align:center;">
+                <h3 style="margin-top:0;">我的個人資料</h3>
+                <div style="font-size:40px; margin-bottom:10px;" id="my-avatar">👻</div>
+                <p style="font-size:14px;">等級積分：<span id="my-pts" style="color:var(--primary); font-weight:bold;">0</span></p>
+                <button class="btn" style="width:120px; background:var(--gold);" onclick="checkIn()">🎁 每日簽到</button>
+                
+                <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
+                    <p style="font-size:12px; opacity:0.5; margin-bottom:5px;">更換頭像</p>
+                    <button class="avatar-btn" onclick="setAvatar('🤖')">🤖</button>
+                    <button class="avatar-btn" onclick="setAvatar('🐱')">🐱</button>
+                    <button class="avatar-btn" onclick="setAvatar('🐉')">🐉</button>
+                    <button class="avatar-btn" onclick="setAvatar('👽')">👽</button>
+                    <button class="avatar-btn" onclick="setAvatar('🤡')">🤡</button>
+                </div>
+            </div>
+
+            <h3>🔥 熱門腳本</h3>
+            <div id="s-list"></div>
+        </div>
     </div>
 
     <div id="v-creators" class="view">
@@ -122,10 +166,32 @@
 <div id="toast">系統通知</div>
 
 <script>
-    // 強制更新緩存名稱
-    let USERS = JSON.parse(localStorage.getItem('DB_USERS_NEW')) || [];
-    let SCRIPTS = JSON.parse(localStorage.getItem('DB_SCRIPTS_NEW')) || [{n:"腳本 V1", c:"print('LEO')"}];
-    let STATS = JSON.parse(localStorage.getItem('DB_STATS_NEW')) || {v:0, s:0};
+    // 5. 音效系統 (使用瀏覽器內建合成器，免下載檔案)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(freq, dur, type='sine') {
+        try {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type; osc.frequency.value = freq;
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + dur);
+            setTimeout(() => osc.stop(), dur * 1000);
+        } catch(e){}
+    }
+    function soundClick() { playBeep(600, 0.1); }
+    function soundSuccess() { playBeep(800, 0.1); setTimeout(()=>playBeep(1200, 0.2), 100); }
+    function soundErr() { playBeep(300, 0.2, 'square'); }
+
+    // 所有按鈕加上點擊音效
+    document.addEventListener('click', (e) => {
+        if(e.target.tagName === 'BUTTON' || e.target.classList.contains('nav-item')) soundClick();
+    });
+
+    // 數據庫
+    let USERS = JSON.parse(localStorage.getItem('DB_USERS_V13')) || [];
+    let SCRIPTS = JSON.parse(localStorage.getItem('DB_SCRIPTS_V13')) || [{n:"萬用腳本", c:"print('LEO')", likes:0}];
+    let STATS = JSON.parse(localStorage.getItem('DB_STATS_V13')) || {v:0, s:0};
     let sess = null, isReg = false, mode = 'user';
 
     function init() {
@@ -133,27 +199,45 @@
             document.getElementById('loader').style.opacity = '0';
             setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
             STATS.v++; save();
+            runBroadcast();
         }, 1200);
     }
 
-    function msg(t){ const o=document.getElementById('toast'); o.innerText=t; o.style.bottom='40px'; setTimeout(()=>o.style.bottom='-80px',2500); }
+    // 跑馬燈廣播系統
+    const b_msgs = ["📢 LEO HUB 系統升級完成！", "🔥 新增每日簽到與排行榜功能！", "💎 贊助支持請聯絡管理員！"];
+    function runBroadcast(){
+        setInterval(()=>{
+            let text = b_msgs[Math.floor(Math.random() * b_msgs.length)];
+            document.getElementById('mq-text').innerText = text;
+        }, 15000);
+    }
+    function addBroadcast(t) {
+        document.getElementById('mq-text').innerText = "📢 " + t;
+        b_msgs.push(t);
+        if(b_msgs.length > 10) b_msgs.shift();
+    }
+
+    function msg(t, ok=true){ 
+        const o=document.getElementById('toast'); o.innerText=t; o.style.bottom='40px'; 
+        setTimeout(()=>o.style.bottom='-80px',2500); 
+        if(ok) soundSuccess(); else soundErr();
+    }
     function toggleMenu(){ document.getElementById('sb').classList.toggle('active'); }
     function save(){ 
-        localStorage.setItem('DB_USERS_NEW', JSON.stringify(USERS)); 
-        localStorage.setItem('DB_SCRIPTS_NEW', JSON.stringify(SCRIPTS));
-        localStorage.setItem('DB_STATS_NEW', JSON.stringify(STATS));
+        localStorage.setItem('DB_USERS_V13', JSON.stringify(USERS)); 
+        localStorage.setItem('DB_SCRIPTS_V13', JSON.stringify(SCRIPTS));
+        localStorage.setItem('DB_STATS_V13', JSON.stringify(STATS));
     }
 
     function go(id){
-        if(id!=='v-auth' && id!=='v-creators' && !sess) return msg("⚠️ 請先登入");
+        if(id!=='v-auth' && id!=='v-creators' && !sess) return msg("⚠️ 請先登入", false);
         document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         toggleMenu();
-        if(id==='v-copy') drawS();
+        if(id==='v-copy') { drawS(); updateProfileUI(); }
         if(id==='v-admin') drawStats();
     }
 
-    // 嚴格格式驗證
     function validate(str, isUser) {
         const underscores = (str.match(/_/g) || []).length;
         if(underscores !== 1) return "必須包含且只有一個底線(_)";
@@ -163,7 +247,7 @@
         return true;
     }
 
-    function setAuth(m){ mode = m; isReg = false; msg("切換模式: " + m); }
+    function setAuth(m){ mode = m; isReg = false; }
     function toggleReg(){ isReg = !isReg; document.getElementById('ipt-p2').style.display = isReg ? "block" : "none"; }
 
     function handleAuth(){
@@ -175,32 +259,84 @@
         document.getElementById('err-p').style.display = 'none';
 
         if(mode === 'admin'){
-            if(u === 'admin' && p === 'LEO_888'){ sess = {u:"管理員", role:"admin"}; loginOk(); }
-            else { msg("❌ 管理員驗證失敗"); }
+            if(u === 'admin' && p === 'LEO_888'){ 
+                sess = {u:"管理員", role:"admin", pts:999, avatar:"👑"}; loginOk(); 
+            } else { msg("❌ 驗證失敗", false); }
             return;
         }
 
         const vU = validate(u, true);
         const vP = validate(p, false);
 
-        if(vU !== true){ const e=document.getElementById('err-u'); e.innerText=vU; e.style.display='block'; return; }
-        if(vP !== true){ const e=document.getElementById('err-p'); e.innerText=vP; e.style.display='block'; return; }
+        if(vU !== true){ const e=document.getElementById('err-u'); e.innerText=vU; e.style.display='block'; soundErr(); return; }
+        if(vP !== true){ const e=document.getElementById('err-p'); e.innerText=vP; e.style.display='block'; soundErr(); return; }
 
         if(isReg){
-            if(p !== p2) return msg("❌ 兩次密碼不符");
-            if(USERS.find(x=>x.u === u)) return msg("❌ 名稱已重複");
-            USERS.push({u, p, role:'user'}); save();
+            if(p !== p2) return msg("❌ 兩次密碼不符", false);
+            if(USERS.find(x=>x.u === u)) return msg("❌ 名稱已重複", false);
+            // 新增：註冊時給予基本屬性
+            USERS.push({u, p, role:'user', pts:0, avatar:"👻", lastCheck:0}); save();
             msg("✅ 註冊成功，請登入"); toggleReg();
+            addBroadcast(`歡迎新用戶 ${u} 加入了我們！`);
         } else {
             const f = USERS.find(x=>x.u === u && x.p === p);
-            if(f){ sess = f; loginOk(); } else { msg("❌ 帳密錯誤"); }
+            if(f){ 
+                sess = f; 
+                if(!sess.pts) sess.pts = 0; if(!sess.avatar) sess.avatar = "👻";
+                loginOk(); 
+            } else { msg("❌ 帳密錯誤", false); }
         }
     }
 
+    function getLevel(pts) {
+        if(pts >= 100) return {n:"VIP", c:"badge-vip"};
+        if(pts >= 30) return {n:"高手", c:""};
+        return {n:"新手", c:""};
+    }
+
     function loginOk(){
-        document.getElementById('u-tag').innerText = sess.u;
+        let rank = getLevel(sess.pts);
+        document.getElementById('u-tag').innerText = sess.avatar + " " + sess.u;
+        let bdg = document.getElementById('u-badge');
+        bdg.innerText = rank.n;
+        bdg.className = "badge " + rank.c;
+        bdg.style.display = 'inline-block';
+
         if(sess.role==='admin') document.getElementById('adm-nav').style.display='block';
         msg("🔓 登入成功"); go('v-copy');
+    }
+
+    function updateProfileUI() {
+        if(!sess || sess.role === 'admin') return;
+        document.getElementById('my-avatar').innerText = sess.avatar;
+        document.getElementById('my-pts').innerText = sess.pts;
+    }
+
+    function checkIn() {
+        if(sess.role === 'admin') return msg("管理員不需簽到！", false);
+        let today = new Date().toDateString();
+        if(sess.lastCheck === today) return msg("❌ 今天已經簽到過了哦！", false);
+        
+        sess.pts += 10;
+        sess.lastCheck = today;
+        let idx = USERS.findIndex(x=>x.u === sess.u);
+        if(idx !== -1) USERS[idx] = sess;
+        save();
+        updateProfileUI();
+        loginOk(); // 更新稱號
+        msg("🎁 簽到成功！積分 +10");
+        addBroadcast(`${sess.u} 完成了每日簽到！`);
+    }
+
+    function setAvatar(emoji) {
+        if(sess.role === 'admin') return;
+        sess.avatar = emoji;
+        let idx = USERS.findIndex(x=>x.u === sess.u);
+        if(idx !== -1) USERS[idx] = sess;
+        save();
+        updateProfileUI();
+        loginOk(); // 更新頭部
+        msg("🖼️ 頭像更換成功！");
     }
 
     function drawStats(){
@@ -211,16 +347,40 @@
     }
 
     function drawS(){
+        // 按愛心數量排序
+        SCRIPTS.sort((a,b)=>(b.likes || 0) - (a.likes || 0));
         document.getElementById('s-list').innerHTML = SCRIPTS.map((s,i)=>`
-            <div class="glass" style="padding:15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                <b>${s.n}</b>
-                <button class="btn" style="width:auto; padding:5px 15px;" onclick="copyS('${btoa(s.c)}')">複製</button>
+            <div class="glass" style="padding:15px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <b>${s.n} <span style="font-size:10px; color:var(--admin-red);">❤️ ${s.likes || 0}</span></b>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn" style="padding:8px; margin:0; background:rgba(255,77,77,0.2); color:var(--admin-red);" onclick="likeS(${i})">❤️ 按讚</button>
+                    <button class="btn" style="padding:8px; margin:0;" onclick="copyS('${btoa(s.c)}', '${s.n}')">📋 複製</button>
+                </div>
             </div>
         `).join('');
     }
 
-    function copyS(b){ navigator.clipboard.writeText(atob(b)); STATS.s++; save(); msg("📋 複製成功"); }
-    function addS(){ const n=document.getElementById('ad-n').value, c=document.getElementById('ad-c').value; SCRIPTS.push({n,c}); save(); msg("✅ 已發布"); drawStats(); }
+    function likeS(idx) {
+        if(!SCRIPTS[idx].likes) SCRIPTS[idx].likes = 0;
+        SCRIPTS[idx].likes += 1;
+        save(); drawS(); msg("❤️ 感謝你的按讚！");
+    }
+
+    function copyS(b, name){ 
+        navigator.clipboard.writeText(atob(b)); 
+        STATS.s++; save(); 
+        msg("📋 複製成功"); 
+        addBroadcast(`${sess.u} 剛剛複製了 ${name} 腳本！`);
+    }
+
+    function addS(){ 
+        const n=document.getElementById('ad-n').value, c=document.getElementById('ad-c').value; 
+        SCRIPTS.push({n, c, likes:0}); save(); 
+        msg("✅ 已發布"); drawStats(); 
+        addBroadcast(`管理員發布了新腳本：${n}！`);
+    }
 </script>
 </body>
 </html>
