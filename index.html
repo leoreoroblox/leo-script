@@ -3,58 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>雷歐腳本中心 | LEO HUB</title>
+    <title>雷歐腳本中心 V24.0</title>
     <style>
-        /* 核心配色與全域設定 */
-        :root { 
-            --primary: #00ffcc; 
-            --vip: #ffd700; 
-            --bg: #050505; 
-            --card-bg: rgba(18, 18, 18, 0.98); 
-            --btn-grad: linear-gradient(135deg, #FF6B00 0%, #FF9900 100%); 
-            --admin: #ff4d4d; 
-        }
-        * { cursor: none !important; box-sizing: border-box; font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; } 
-        body, html { margin: 0; padding: 0; height: 100%; background: #000; color: #fff; overflow: hidden; }
-
-        /* 游標效果 */
-        #cursor-dot { position: fixed; width: 6px; height: 6px; background: var(--primary); border-radius: 50%; pointer-events: none; z-index: 10000; }
-
-        /* 導航欄與側邊欄 */
-        .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; align-items: center; padding: 0 20px; z-index: 1000; background: rgba(0,0,0,0.9); border-bottom: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
-        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; padding-top: 80px; background: #0a0a0a; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000; border-right: 1px solid var(--primary); }
+        :root { --primary: #00ffcc; --vip: #ffd700; --admin: #ff4d4d; --card-bg: rgba(20,20,20,0.98); }
+        * { cursor: none !important; box-sizing: border-box; font-family: sans-serif; }
+        body { margin: 0; background: #000; color: #fff; overflow: hidden; height: 100vh; }
+        
+        /* 游標 */
+        #dot { position: fixed; width: 6px; height: 6px; background: var(--primary); border-radius: 50%; pointer-events: none; z-index: 10000; }
+        
+        /* 導航與側邊欄 */
+        .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; align-items: center; padding: 0 20px; background: #000; border-bottom: 1px solid #333; z-index: 1000; }
+        .sidebar { position: fixed; left: -260px; top: 0; width: 250px; height: 100%; background: #0a0a0a; border-right: 1px solid var(--primary); transition: 0.3s; z-index: 2000; padding-top: 80px; }
         .sidebar.active { left: 0; }
-        .nav-item { padding: 15px 25px; opacity: 0.7; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 12px; font-size: 15px; }
-        .nav-item:hover { opacity: 1; background: rgba(255,255,255,0.05); }
-        .nav-item.active { opacity: 1; color: var(--primary); background: rgba(0,255,204,0.1); border-left: 4px solid var(--primary); }
+        .nav-item { padding: 15px 25px; opacity: 0.7; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover, .nav-item.active { opacity: 1; background: rgba(0,255,204,0.1); color: var(--primary); }
 
-        /* 主視圖區塊 */
-        .view { display: none; padding: 80px 20px 40px; height: 100vh; overflow-y: auto; }
-        .view.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* 視圖切換 */
+        .view { display: none; padding: 80px 20px; height: 100vh; overflow-y: auto; }
+        .view.active { display: block; }
 
-        /* 卡片與表單組件 */
-        .glass-card { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
-        .auth-box { max-width: 380px; margin: 40px auto; }
-        input, textarea, select { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #000; color: #fff; outline: none; font-size: 14px; }
-        .btn { background: var(--btn-grad); color: #fff; padding: 14px; border-radius: 12px; border: none; font-weight: 900; width: 100%; cursor: pointer; transition: 0.2s; font-size: 16px; }
-        .btn:active { transform: scale(0.96); }
-
-        /* 列表樣式 */
-        .list-item { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 3px solid var(--primary); }
-        .tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; color: #000; font-weight: bold; margin-bottom: 8px; display: inline-block; }
-
-        /* 提示彈窗 */
-        #toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); background: #1c221d; color: #fff; padding: 12px 35px; border-radius: 50px; font-weight: bold; transition: 0.4s; z-index: 9999; border: 1px solid #333; }
+        /* 通用卡片與輸入 */
+        .card { background: var(--card-bg); border: 1px solid #333; border-radius: 15px; padding: 25px; max-width: 400px; margin: 20px auto; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #444; color: #fff; border-radius: 8px; outline: none; }
+        .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; background: linear-gradient(135deg, #FF6B00, #FF9900); color: #fff; font-weight: bold; cursor: pointer; }
+        
+        /* 提示框 */
+        #toast { position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 30px; border-radius: 50px; transition: 0.4s; z-index: 9999; border: 1px solid var(--primary); }
     </style>
 </head>
 <body onload="init()">
 
-<div id="cursor-dot"></div>
+<div id="dot"></div>
+<div id="toast">訊息提示</div>
 
 <header class="header">
-    <div onclick="toggleMenu()" style="cursor:pointer; font-size:24px; margin-right:15px;">☰</div>
-    <div style="font-weight:900; letter-spacing:2px; user-select: none; cursor: pointer;" ondblclick="showAuthCard('admin-card')">雷歐腳本中心</div>
+    <div onclick="toggleMenu()" style="font-size:24px; margin-right:15px; cursor:pointer;">☰</div>
+    <div id="title-main" style="font-weight:bold; letter-spacing:1px; cursor:pointer;">雷歐腳本中心</div>
 </header>
 
 <aside class="sidebar" id="sb">
@@ -64,212 +49,129 @@
     <div class="nav-item" onclick="go('v-forum')">💬 數位廣場</div>
     <div class="nav-item" onclick="go('v-vip')">💎 卡密激活</div>
     <div class="nav-item" onclick="go('v-bug')">🐛 Bug 上報</div>
-    <div id="adm-nav" class="nav-item" onclick="go('v-admin')" style="display:none; color:var(--admin); font-weight:bold; border-top:1px solid #333; margin-top:10px;">🚨 管理總部</div>
+    <div id="adm-btn" class="nav-item" onclick="go('v-admin')" style="display:none; color:var(--admin); font-weight:bold;">🚨 管理總部</div>
 </aside>
 
 <main>
     <div id="v-auth" class="view active">
-        <div class="glass-card auth-box" id="login-card">
-            <h2 style="text-align:center;">雷歐腳本中心登入系統</h2>
-            <input type="text" id="l-user" placeholder="使用者名稱/Email">
-            <input type="password" id="l-pass" placeholder="密碼">
-            <div style="text-align:right; font-size:12px; color:var(--primary); margin-bottom:15px;">
-                <span onclick="showAuthCard('reg-card')" style="cursor:pointer;">沒有帳號？點我註冊</span>
+        <div class="card" id="c-login">
+            <h2 style="text-align:center;">登入系統</h2>
+            <input type="text" id="l-u" placeholder="使用者名稱">
+            <input type="password" id="l-p" placeholder="密碼">
+            <div style="text-align:right; font-size:12px; margin-bottom:10px;">
+                <span onclick="toggleAuth('c-reg')" style="color:var(--primary); cursor:pointer;">沒有帳號？點我註冊</span>
             </div>
-            <button class="btn" onclick="doLogin()">登入</button>
+            <button class="btn" onclick="login()">登入</button>
         </div>
-
-        <div class="glass-card auth-box" id="reg-card" style="display:none;">
-            <h2 style="text-align:center;">註冊雷歐腳本中心</h2>
-            <input type="text" id="r-user" placeholder="使用者名稱/Email">
-            <input type="password" id="r-pass" placeholder="設定密碼">
-            <button class="btn" onclick="doRegister()">註冊</button>
-            <div style="text-align:center; margin-top:20px; font-size:12px; color:#888;">
-                已經有帳號了？ <span onclick="showAuthCard('login-card')" style="color:var(--primary); cursor:pointer;">點我登入</span><br><br>
-                <a href="#" style="color:var(--primary); text-decoration:none;">忘記密碼</a>
-            </div>
+        <div class="card" id="c-reg" style="display:none;">
+            <h2 style="text-align:center;">註冊帳號</h2>
+            <input type="text" id="r-u" placeholder="使用者名稱/Email">
+            <input type="password" id="r-p" placeholder="設定密碼">
+            <button class="btn" onclick="reg()">註冊</button>
+            <p style="text-align:center; font-size:12px; color:var(--primary); cursor:pointer;" onclick="toggleAuth('c-login')">返回登入</p>
         </div>
-
-        <div class="glass-card auth-box" id="admin-card" style="display:none;">
+        <div class="card" id="c-admin" style="display:none;">
             <h2 style="text-align:center; color:var(--admin);">管理員認證</h2>
-            <input type="text" id="a-user" placeholder="管理員帳號">
-            <input type="password" id="a-pass" placeholder="認證密鑰">
-            <button class="btn" style="background:var(--admin);" onclick="doAdminLogin()">驗證登入</button>
-            <div style="text-align:center; margin-top:15px; font-size:12px;">
-                <span onclick="showAuthCard('login-card')" style="cursor:pointer;">返回普通登入</span>
-            </div>
+            <input type="text" id="a-u" placeholder="管理員帳號">
+            <input type="password" id="a-p" placeholder="密鑰">
+            <button class="btn" style="background:var(--admin)" onclick="adminLogin()">認證登入</button>
         </div>
     </div>
 
-    <div id="v-notice" class="view">
-        <div style="max-width:600px; margin:auto;">
-            <h3>📢 系統公告</h3>
-            <div class="list-item"><b>核心更新：</b> 已成功整合所有功能模組。</div>
-            <div class="list-item"><b>提示：</b> 如功能未顯示，請重新登入帳號。</div>
-        </div>
-    </div>
-
-    <div id="v-hub" class="view">
-        <div style="max-width:800px; margin:auto; display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:20px;">
-            <div class="glass-card">
-                <span class="tag" style="background:var(--primary);">FREE</span>
-                <h4>基礎農場助手</h4>
-                <p style="font-size:12px; opacity:0.6;">簡單穩定的掛機腳本。</p>
-                <button class="btn" onclick="msg('代碼已複製到剪貼簿')" style="font-size:12px; padding:10px;">複製代碼</button>
-            </div>
-            <div class="glass-card">
-                <span class="tag" style="background:var(--vip);">VIP</span>
-                <h4>自瞄透視 Pro</h4>
-                <p style="font-size:12px; opacity:0.6;">VIP 尊享的高級功能。</p>
-                <button class="btn" onclick="checkVip()" style="font-size:12px; padding:10px;">檢查權限</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="v-forum" class="view">
-        <div style="max-width:600px; margin:auto;">
-            <div class="glass-card">
-                <h4>💬 即時交流廣場</h4>
-                <textarea id="f-msg" placeholder="說點什麼..."></textarea>
-                <button class="btn" onclick="postForum()">發布</button>
-            </div>
-            <div id="forum-list" style="margin-top:20px;"></div>
-        </div>
-    </div>
-
+    <div id="v-notice" class="view"><div class="card"><h3>📢 最新公告</h3><p>系統已修復，功能全部回歸。</p></div></div>
+    <div id="v-hub" class="view"><div class="card"><h3>📋 腳本清單</h3><button class="btn" onclick="msg('代碼已複製')">複製通用腳本</button></div></div>
+    <div id="v-forum" class="view"><div class="card"><h3>💬 廣場</h3><textarea placeholder="說點什麼"></textarea><button class="btn" onclick="msg('發送成功')">發送</button></div></div>
     <div id="v-vip" class="view">
-        <div class="glass-card auth-box" style="text-align:center;">
-            <h2 style="color:var(--vip);">💎 卡密兌換中心</h2>
-            <p style="font-size:12px; opacity:0.6;">輸入您的 12 位 VIP 激活碼</p>
-            <input id="key-input" style="text-align:center; border:1px solid var(--vip); font-size:18px;" placeholder="LEO-XXXX-XXXX">
-            <button class="btn" style="background:var(--vip); color:#000;" onclick="doRedeem()">立即激活</button>
+        <div class="card">
+            <h3>💎 卡密激活</h3>
+            <input id="k-in" placeholder="LEO-XXXX-XXXX">
+            <button class="btn" onclick="redeem()">激活 VIP</button>
         </div>
     </div>
-
-    <div id="v-bug" class="view">
-        <div class="glass-card auth-box">
-            <h3>🐛 反饋問題</h3>
-            <textarea id="b-text" placeholder="描述您遇到的錯誤..."></textarea>
-            <button class="btn" onclick="msg('已收到您的回報，謝謝！')">提交報告</button>
-        </div>
-    </div>
-
+    <div id="v-bug" class="view"><div class="card"><h3>🐛 Bug 上報</h3><textarea placeholder="詳細描述問題"></textarea><button class="btn" onclick="msg('感謝您的回饋')">提交</button></div></div>
+    
     <div id="v-admin" class="view">
-        <div class="glass-card" style="max-width:600px; margin:auto;">
-            <h2 style="color:var(--admin);">🚨 最高控制台</h2>
-            <div style="border-bottom:1px solid #333; padding-bottom:20px; margin-bottom:20px;">
-                <h4>生成 VIP 卡密</h4>
-                <button class="btn" onclick="genVipKey()">隨機生成並複製</button>
-                <div id="admin-out" style="margin-top:10px; color:var(--vip); font-family:monospace;"></div>
-            </div>
-            <p>資料庫用戶總數：<span id="user-total">0</span></p>
+        <div class="card">
+            <h3 style="color:var(--admin);">🚨 管理員後台</h3>
+            <button class="btn" onclick="genKey()">生成 VIP 卡密</button>
+            <div id="k-out" style="margin-top:10px; color:var(--vip);"></div>
         </div>
     </div>
 </main>
 
-<div id="toast">訊息提示</div>
-
 <script>
-    // 初始化數據庫
-    let USERS = JSON.parse(localStorage.getItem('LEO_HUB_DB_FINAL')) || [];
+    let users = JSON.parse(localStorage.getItem('LEO_V24')) || [];
     let sess = null;
 
-    // 游標效果
-    window.addEventListener('mousemove', e => {
-        document.getElementById('cursor-dot').style.left = e.x + 'px';
-        document.getElementById('cursor-dot').style.top = e.y + 'px';
+    window.addEventListener('mousemove', e => { 
+        document.getElementById('dot').style.left = e.x+'px'; 
+        document.getElementById('dot').style.top = e.y+'px'; 
     });
 
-    function init() { console.log("系統加載完成"); }
+    function init() {
+        // 雙擊標題進入管理員登入
+        document.getElementById('title-main').ondblclick = () => {
+            toggleAuth('c-admin');
+            msg("進入管理員模式");
+        };
+    }
+
     function msg(t) {
-        const o = document.getElementById('toast');
-        o.innerText = t; o.style.bottom = '40px';
-        setTimeout(() => o.style.bottom = '-80px', 2500);
+        const s = document.getElementById('toast');
+        s.innerText = t; s.style.bottom = '30px';
+        setTimeout(() => s.style.bottom = '-60px', 2000);
     }
 
     function toggleMenu() { document.getElementById('sb').classList.toggle('active'); }
-
-    // 視圖切換
-    function go(id) {
-        if(!sess && id !== 'v-auth') return msg("請先登入驗證身分");
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        if(document.getElementById('sb').classList.contains('active')) toggleMenu();
-        if(id === 'v-admin') document.getElementById('user-total').innerText = USERS.length;
-    }
-
-    function showAuthCard(id) {
-        document.getElementById('login-card').style.display = 'none';
-        document.getElementById('reg-card').style.display = 'none';
-        document.getElementById('admin-card').style.display = 'none';
+    function toggleAuth(id) {
+        document.getElementById('c-login').style.display = 'none';
+        document.getElementById('c-reg').style.display = 'none';
+        document.getElementById('c-admin').style.display = 'none';
         document.getElementById(id).style.display = 'block';
     }
 
-    // 帳號邏輯
-    function doLogin() {
-        const u = document.getElementById('l-user').value;
-        const p = document.getElementById('l-pass').value;
-        const user = USERS.find(x => x.u === u && x.p === p);
-        if(user) { sess = user; loginOk(); } else msg("帳號或密碼錯誤");
+    function go(id) {
+        if(!sess && id !== 'v-auth') return msg("請先登入");
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(document.getElementById('sb').classList.contains('active')) toggleMenu();
     }
 
-    function doRegister() {
-        const u = document.getElementById('r-user').value;
-        const p = document.getElementById('r-pass').value;
-        if(!u || !p) return msg("輸入內容不能為空");
-        if(USERS.find(x => x.u === u)) return msg("此帳號已被註冊");
-        USERS.push({u, p, isVip: false, isAdmin: false});
-        localStorage.setItem('LEO_HUB_DB_FINAL', JSON.stringify(USERS));
-        msg("註冊成功！");
-        showAuthCard('login-card');
+    function reg() {
+        const u = document.getElementById('r-u').value, p = document.getElementById('r-p').value;
+        if(!u || !p) return msg("不能為空");
+        users.push({u, p, vip: false});
+        localStorage.setItem('LEO_V24', JSON.stringify(users));
+        msg("註冊成功，請登入");
+        toggleAuth('c-login');
     }
 
-    function doAdminLogin() {
-        const u = document.getElementById('a-user').value;
-        const p = document.getElementById('a-pass').value;
-        if(u === "admin" && p === "LEO_888") {
-            sess = {u: "管理員", isAdmin: true, isVip: true};
-            loginOk();
-        } else msg("管理員密鑰無效");
+    function login() {
+        const u = document.getElementById('l-u').value, p = document.getElementById('l-p').value;
+        const find = users.find(x => x.u === u && x.p === p);
+        if(find) { sess = find; msg("歡迎回來"); go('v-notice'); } else msg("帳號密碼錯誤");
     }
 
-    function loginOk() {
-        msg("連接成功，歡迎回到雷歐中心");
-        if(sess.isAdmin) document.getElementById('adm-nav').style.display = 'flex';
-        go('v-notice');
+    function adminLogin() {
+        if(document.getElementById('a-u').value === "admin" && document.getElementById('a-p').value === "LEO_888") {
+            sess = {u: "Admin", admin: true};
+            document.getElementById('adm-btn').style.display = 'flex';
+            msg("管理員認證成功");
+            go('v-admin');
+        } else msg("認證失敗");
     }
 
-    // 功能邏輯
-    function postForum() {
-        const val = document.getElementById('f-msg').value;
-        if(!val) return;
-        const div = document.createElement('div');
-        div.className = 'list-item';
-        div.innerHTML = `<b>${sess.u}:</b> ${val}`;
-        document.getElementById('forum-list').prepend(div);
-        document.getElementById('f-msg').value = "";
+    function redeem() {
+        const k = document.getElementById('k-in').value.toUpperCase();
+        if(k.startsWith("VIP-LEO-")) { msg("VIP 激活成功！"); sess.vip = true; }
+        else msg("卡密無效或已被使用");
     }
 
-    function doRedeem() {
-        const k = document.getElementById('key-input').value.toUpperCase();
-        if(k.startsWith("VIP-LEO-")) {
-            sess.isVip = true;
-            let idx = USERS.findIndex(u => u.u === sess.u);
-            if(idx !== -1) { USERS[idx].isVip = true; localStorage.setItem('LEO_HUB_DB_FINAL', JSON.stringify(USERS)); }
-            msg("VIP 權限激活成功！");
-        } else msg("卡密無效或已被使用");
-    }
-
-    function genVipKey() {
+    function genKey() {
         const k = "VIP-LEO-" + Math.random().toString(36).substr(2, 6).toUpperCase();
-        document.getElementById('admin-out').innerText = k;
+        document.getElementById('k-out').innerText = "新卡密: " + k;
         navigator.clipboard.writeText(k);
-        msg("已生成並複製卡密");
-    }
-
-    function checkVip() {
-        if(sess.isVip) msg("權限確認：VIP 會員"); else msg("此為 VIP 專屬功能");
+        msg("卡密已生成並複製");
     }
 </script>
 </body>
