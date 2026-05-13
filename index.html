@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雷歐腳本中心 v3.7 - 最終穩定版</title>
+    <title>雷歐腳本中心 - 旗艦終極版 v3.8</title>
     <style>
         :root {
             --primary: #00ffcc;
@@ -12,6 +12,7 @@
             --sidebar-bg: #050505;
             --card-bg: #161616;
             --text: #ffffff;
+            --gold: #ffd700;
         }
         * { box-sizing: border-box; font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg); color: var(--text); display: flex; overflow-x: hidden; }
@@ -24,11 +25,7 @@
         }
         .sidebar.hidden { transform: translateX(-100%); }
         .sidebar-header { padding: 25px; text-align: center; color: var(--primary); font-weight: bold; font-size: 20px; border-bottom: 1px solid #222; }
-        
-        .nav-item { 
-            padding: 15px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px;
-            opacity: 0.7; transition: 0.2s; border-left: 4px solid transparent; font-size: 14px;
-        }
+        .nav-item { padding: 15px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; opacity: 0.7; transition: 0.2s; font-size: 14px; }
         .nav-item:hover, .nav-item.active { opacity: 1; background: rgba(0,255,204,0.1); border-left: 4px solid var(--primary); color: var(--primary); }
         .nav-admin { color: var(--admin-red); font-weight: bold; border-top: 1px solid #222; }
 
@@ -39,25 +36,30 @@
         /* UI 元件 */
         .card { background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .btn { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; background: var(--primary); color: #000; transition: 0.2s; }
-        .btn:hover { opacity: 0.8; transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-red { background: var(--admin-red); color: #fff; }
         input, textarea, select { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 6px; }
+
+        /* 抽獎砸金蛋 */
+        .egg-container { display: flex; justify-content: center; gap: 20px; margin: 30px 0; }
+        .egg { width: 100px; height: 130px; background: radial-gradient(circle at 30% 30%, #f1c40f, #9c8500); border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; cursor: pointer; transition: 0.3s; position: relative; }
+        .egg:hover { transform: scale(1.1); filter: brightness(1.1); }
+        .egg.broken { background: #555; transform: scale(0.9); cursor: default; }
 
         /* 表格樣式 */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #222; }
-        th { color: var(--primary); font-size: 13px; text-transform: uppercase; }
+        th { color: var(--primary); font-size: 13px; }
 
-        /* 隱藏/顯示按鈕 */
-        .toggle-btn { position: fixed; left: 15px; bottom: 15px; z-index: 1100; background: var(--primary); width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; font-size: 20px; box-shadow: 0 0 10px var(--primary); }
-
-        /* 登入彈窗 */
-        .login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(8px); }
-        .login-box { background: var(--card-bg); padding: 35px; border-radius: 15px; width: 90%; max-width: 380px; border: 1px solid var(--primary); text-align: center; }
-
+        .toggle-btn { position: fixed; left: 15px; bottom: 15px; z-index: 1100; background: var(--primary); width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; }
         .view { display: none; animation: fadeIn 0.4s ease; }
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 商店網格 */
+        .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .shop-card { border: 1px solid #333; padding: 15px; border-radius: 10px; background: #1a1a1a; }
+        .price-tag { color: var(--gold); font-weight: bold; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -65,286 +67,413 @@
 <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
 
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">LEO HUB v3.7</div>
-    <div class="nav-item active" onclick="showView('v-creator')">🏠 脚本创作者</div>
+    <div class="sidebar-header">LEO HUB v3.8</div>
+    <div class="nav-item active" onclick="showView('v-home')">🏠 脚本创作者</div>
     <div class="nav-item" onclick="showView('v-notice')">📢 公告系統</div>
     <div class="nav-item" onclick="showView('v-copy')">📜 脚本復制</div>
+    <div class="nav-item" onclick="showView('v-forum')">💬 交流中心</div>
     <div class="nav-item" onclick="showView('v-pts-sys')">💰 積分系統</div>
+    <div class="nav-item" onclick="showView('v-contact')">📱 聯繫方式</div>
     
-    <div id="logged-in-menu" style="display:none;">
+    <div id="user-only-nav" style="display:none;">
         <div class="nav-item" onclick="showView('v-draw')">🥚 抽獎系統</div>
+        <div class="nav-item" onclick="showView('v-shop')">🛒 積分商店</div>
+        <div class="nav-item" onclick="showView('v-feedback')">📩 用戶反饋</div>
     </div>
 
-    <!-- 管理員專用選單 -->
     <div class="nav-item nav-admin" onclick="showView('v-admin-login')">🛡️ 管理員入口</div>
     <div id="admin-menu" style="display:none;">
-        <div class="nav-item nav-admin" onclick="showView('v-mgr-data')">📊 平台數據統計</div>
-        <div class="nav-item nav-admin" onclick="showView('v-mgr-notice')">✍️ 快捷公告系統</div>
-        <div class="nav-item nav-admin" onclick="showView('v-mgr-keylist')">🗃️ 卡密管理系統</div>
-        <div class="nav-item nav-admin" onclick="showView('v-mgr-user')">👥 用戶/封禁管理</div>
+        <div class="nav-item nav-admin" onclick="showView('v-mgr-draw')">⚙️ 抽獎控制</div>
+        <div class="nav-item nav-admin" onclick="showView('v-mgr-fb')">💬 反饋管理</div>
+        <div class="nav-item nav-admin" onclick="showView('v-mgr-keylist')">🗃️ 卡密管理</div>
+        <div class="nav-item nav-admin" onclick="showView('v-mgr-user')">👥 用戶管理</div>
     </div>
 </aside>
 
 <main class="main-content" id="main-content">
     
-    <!-- 1. 腳本創作者 -->
-    <div id="v-creator" class="view active">
+    <div id="v-home" class="view active">
         <div class="card">
-            <h2 style="color:var(--primary)">🎨 脚本创作者名單</h2>
-            <p style="margin-top:15px;"><b>總負責人：</b>雷欧REO_ROBLOX</p>
-            <p><b>技術支援：</b>雷欧REO_ROBLOX</p>
-            <button class="btn" style="margin-top:20px; width:100%" onclick="toggleLogin(true)">開啟登入介面</button>
+            <h2 style="color:var(--primary)">🎨 脚本创作者</h2>
+            <p style="margin-top:10px;"><b>總策劃：</b>雷欧REO_ROBLOX</p>
+            <p><b>總創作者：</b>雷欧REO_ROBLOX | <b>創作者：</b>雷欧REO_ROBLOX</p>
+            <p><b>合作者 / 腳本創作：</b>雷欧REO_ROBLOX</p>
+            <hr style="margin:15px 0; opacity:0.1;">
+            <p><b>網站負責人 / 創作人 / 管理員：</b>雷欧REO_ROBLOX</p>
+            <p><b>總設計 / 程式 / 貢獻者：</b>雷欧REO_ROBLOX</p>
+            <h3 style="margin-top:15px; color:var(--primary)">感謝使用！</h3>
+        </div>
+        <div class="card" id="login-section">
+            <h3>🔑 帳號登入</h3>
+            <input type="text" id="user-u" placeholder="使用者名稱">
+            <input type="password" id="user-p" placeholder="密碼">
+            <button class="btn" onclick="handleLogin()">登入</button>
         </div>
     </div>
 
-    <!-- 2. 公告系統 (用戶看) -->
-    <div id="v-notice" class="view">
-        <div class="card">
-            <h2>📢 最新公告</h2>
-            <div id="notice-display-list" style="margin-top:15px;"></div>
-        </div>
-    </div>
-
-    <!-- 3. 腳本複製 -->
     <div id="v-copy" class="view">
         <div class="card">
             <h2>📜 脚本復制</h2>
-            <textarea readonly id="script-area" style="height:100px; color:var(--primary); font-family:monospace;">loadstring(game:HttpGet("https://raw.githubusercontent.com/REO/main/script.lua"))()</textarea>
-            <button class="btn" onclick="copyText()">複製腳本代碼</button>
+            <p>點擊按鈕複製您的啟動代碼。</p>
+            <button class="btn" style="margin-top:10px;" onclick="copyTxt('loadstring(game:HttpGet(\'https://reo.hub/main.lua\'))()')">複製通用腳本</button>
         </div>
     </div>
 
-    <!-- 4. 積分系統 -->
     <div id="v-pts-sys" class="view">
         <div class="card">
             <h2>💰 積分中心</h2>
-            <h1 id="my-pts" style="font-size:48px; color:var(--primary); margin:15px 0;">0</h1>
-            <button class="btn" onclick="dailySign()">📅 每日簽到 (+10)</button>
+            <p style="font-size:40px; color:var(--primary);" id="display-pts">0</p>
+            <button class="btn" id="sign-btn" onclick="dailySign()">📅 每日簽到 (+5)</button>
+            <p style="margin-top:10px; font-size:12px; color:#888;">* 每 24 小時可簽到一次，需連續登入。</p>
         </div>
     </div>
 
-    <!-- 5. 抽獎系統 (登入後顯示) -->
     <div id="v-draw" class="view">
-        <div class="card" style="text-align:center;">
+        <div class="card">
             <h2>🥚 砸金蛋抽獎</h2>
-            <div style="font-size:60px; margin:20px;">🥚 🥚 🥚</div>
-            <button class="btn" onclick="alert('抽獎功能已就緒！')">點擊砸蛋</button>
+            <div id="draw-status-ui"></div>
+            <div class="egg-container" id="egg-box">
+                <div class="egg" onclick="crackEgg(this)"></div>
+                <div class="egg" onclick="crackEgg(this)"></div>
+                <div class="egg" onclick="crackEgg(this)"></div>
+            </div>
+            <div id="draw-result-text" style="text-align:center; font-weight:bold; font-size:20px;"></div>
         </div>
     </div>
 
-    <!-- 管理員驗證 -->
+    <div id="v-shop" class="view">
+        <div class="card">
+            <h2>🛒 積分商店</h2>
+            <div class="shop-grid">
+                <div class="shop-card">
+                    <h4>墨水游戏汉化防风</h4>
+                    <p class="price-tag">300 積分</p>
+                    <button class="btn" onclick="buyScript(300, '墨水游戏')">兌換</button>
+                </div>
+                <div class="shop-card">
+                    <h4>最新皮脚本</h4>
+                    <p class="price-tag">100 積分</p>
+                    <button class="btn" onclick="buyScript(100, '皮脚本')">兌換</button>
+                </div>
+                <div class="shop-card">
+                    <h4>縫合腳本</h4>
+                    <p class="price-tag">300 積分</p>
+                    <button class="btn" onclick="buyScript(300, '縫合腳本')">兌換</button>
+                </div>
+                <div class="shop-card">
+                    <h4>被遺棄腳本</h4>
+                    <p class="price-tag">500 積分</p>
+                    <button class="btn" onclick="buyScript(500, '被遺棄')">兌換</button>
+                </div>
+                <div class="shop-card">
+                    <h4>死鐵鬼腳本</h4>
+                    <p class="price-tag">250 積分</p>
+                    <button class="btn" onclick="buyScript(250, '死鐵鬼')">兌換</button>
+                </div>
+                <div class="shop-card" style="border: 1px dashed var(--gold);">
+                    <h4>自定義腳本</h4>
+                    <p class="price-tag">100 - 10000 積分</p>
+                    <button class="btn" onclick="alert('請聯繫 QQ: 2031480494 提供聯繫方式')">申請兌換</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="v-contact" class="view">
+        <div class="card">
+            <h2>📱 聯繫方式</h2>
+            <p style="font-size:24px; margin-top:15px;">作者 QQ：<span style="color:var(--primary)">2031480494</span></p>
+            <p style="color:#888;">(請說明來意)</p>
+        </div>
+    </div>
+
+    <div id="v-feedback" class="view">
+        <div class="card">
+            <h2>📩 用戶反饋</h2>
+            <select id="fb-type">
+                <option value="腳本問題">腳本問題</option>
+                <option value="功能建議">功能建議</option>
+                <option value="投訴/舉報">投訴/舉報</option>
+                <option value="其他">其他</option>
+            </select>
+            <textarea id="fb-content" placeholder="請詳細描述您的問題..."></textarea>
+            <button class="btn" onclick="submitFeedback()">提交反饋</button>
+            <div id="my-fb-history" style="margin-top:20px;"></div>
+        </div>
+    </div>
+
     <div id="v-admin-login" class="view">
-        <div class="card" style="max-width:400px; margin:100px auto;">
-            <h2 style="color:var(--admin-red); text-align:center;">管理員驗證</h2>
-            <input type="password" id="adm-pass" placeholder="輸入管理密鑰 (預設 REO888)">
-            <button class="btn btn-red" style="width:100%" onclick="checkAdmin()">驗證並進入後台</button>
+        <div class="card" style="max-width:400px; margin: 50px auto;">
+            <h2>🛡️ 管理員認證</h2>
+            <input type="password" id="adm-pass" placeholder="輸入密鑰 (預設 REO888)">
+            <button class="btn btn-red" style="width:100%" onclick="checkAdmin()">進入後台</button>
         </div>
     </div>
 
-    <!-- 後台：數據統計 -->
     <div id="v-mgr-data" class="view">
         <div class="card">
-            <h2>📊 平台數據統計</h2>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:15px;">
-                <div class="card" style="background:#222; text-align:center;"><h3>總用戶</h3><h1 id="count-u">0</h1></div>
-                <div class="card" style="background:#222; text-align:center;"><h3>總卡密</h3><h1 id="count-k">0</h1></div>
+            <h2>📊 平台數據</h2>
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; text-align:center;">
+                <div class="card"><h3>註冊數</h3><h1 id="stat-u">0</h1></div>
+                <div class="card"><h3>卡密數</h3><h1 id="stat-k">0</h1></div>
+                <div class="card"><h3>訪問量</h3><h1>1,285</h1></div>
             </div>
         </div>
     </div>
 
-    <!-- 後台：快捷公告 (解決沒反應) -->
-    <div id="v-mgr-notice" class="view">
+    <div id="v-mgr-draw" class="view">
         <div class="card">
-            <h2>✍️ 公告發布</h2>
-            <input type="text" id="new-notice-title" placeholder="公告標題">
-            <textarea id="new-notice-content" placeholder="公告內容..."></textarea>
-            <button class="btn" onclick="saveNotice()">發布公告</button>
+            <h2>⚙️ 抽獎控制面板</h2>
+            <button class="btn" id="toggle-draw-btn" onclick="toggleLottery()">開啟抽獎系統</button>
+            <p style="margin-top:10px;">目前狀態：<span id="draw-active-status">已關閉</span></p>
         </div>
     </div>
 
-    <!-- 後台：卡密管理 (解決沒反應) -->
+    <div id="v-mgr-fb" class="view">
+        <div class="card">
+            <h2>💬 反饋管理</h2>
+            <div id="admin-fb-list"></div>
+        </div>
+    </div>
+
     <div id="v-mgr-keylist" class="view">
         <div class="card">
-            <h2>🔑 卡密生成與管理</h2>
-            <div style="display:flex; gap:10px;">
-                <input type="number" id="key-num" value="1" style="width:80px">
-                <button class="btn" onclick="makeKeys()">批量生成</button>
-            </div>
-            <table>
-                <thead><tr><th>卡密內容</th><th>狀態</th><th>操作</th></tr></thead>
-                <tbody id="key-list-body"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- 後台：用戶管理 -->
-    <div id="v-mgr-user" class="view">
-        <div class="card">
-            <h2>👥 用戶列表</h2>
-            <table>
-                <thead><tr><th>名稱</th><th>積分</th><th>權限</th></tr></thead>
-                <tbody id="user-list-body"></tbody>
-            </table>
+            <h2>🔑 卡密生成系統</h2>
+            <p>12位混合格式 (XXX_XXX_XXX_XXX)</p>
+            <input type="number" id="key-count" value="1" min="1">
+            <button class="btn" onclick="generateKeys()">批量生成</button>
+            <div id="key-display-area" style="margin-top:10px; background:#000; padding:10px; font-family:monospace;"></div>
         </div>
     </div>
 
 </main>
 
-<!-- 登入 UI 彈窗 -->
-<div class="login-overlay" id="login-ui">
-    <div class="login-box">
-        <h2 style="color:var(--primary)">User Login</h2>
-        <input type="text" id="user-u" placeholder="用戶名">
-        <input type="password" id="user-p" placeholder="密碼">
-        <button class="btn" style="width:100%; margin-top:15px;" onclick="handleLogin()">立即登入</button>
-        <p style="margin-top:15px; color:#666; cursor:pointer;" onclick="toggleLogin(false)">取消返回</p>
-    </div>
-</div>
-
 <script>
-    // 1. 數據初始化[span_1](start_span)[span_1](end_span)
-    let db = {
+    // --- 數據結構初始化 ---
+    const DB = {
+        users: JSON.parse(localStorage.getItem('REO_USERS') || '[{"u":"REO","p":"123","pts":100,"lastSign":0,"draws":0}]'),
+        feedbacks: JSON.parse(localStorage.getItem('REO_FB') || '[]'),
         keys: JSON.parse(localStorage.getItem('REO_KEYS') || '[]'),
-        notices: JSON.parse(localStorage.getItem('REO_NOTICES') || '[]'),
-        users: JSON.parse(localStorage.getItem('REO_USERS') || '[{"name":"測試員","pts":100}]')
+        lottery: JSON.parse(localStorage.getItem('REO_LOTTERY_CFG') || '{"active":false,"winners":0}')
     };
 
-    // 2. 側邊欄切換
+    let currentU = null;
+
+    // --- 抽獎配置 ---
+    const PRIZES = [
+        { name: "特大獎", pts: 350, prob: 0.5, max: 3 },
+        { name: "超級大獎", pts: 300, prob: 1.5, max: 10 },
+        { name: "超大獎", pts: 280, prob: 2.5, max: 15 },
+        { name: "大獎", pts: 250, prob: 3.5, max: 20 },
+        { name: "中獎", pts: 200, prob: 4.5, max: 999 },
+        { name: "小獎", pts: 150, prob: 5.5, max: 999 },
+        { name: "金獎", pts: 100, prob: 6.5, max: 999 },
+        { name: "銀獎", pts: 75, prob: 7.5, max: 999 },
+        { name: "銅獎", pts: 50, prob: 8.5, max: 999 },
+        { name: "安慰獎", pts: 10, prob: 100, max: 999 } // 剩餘全為安慰獎
+    ];
+
+    // --- 介面控制 ---
     function toggleSidebar() {
         document.getElementById('sidebar').classList.toggle('hidden');
         document.getElementById('main-content').classList.toggle('expanded');
     }
 
-    function toggleLogin(show) {
-        document.getElementById('login-ui').style.display = show ? 'flex' : 'none';
-    }
-
-    // 3. 核心視圖切換 (確保所有管理功能被調用)[span_2](start_span)[span_2](end_span)
     function showView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(v => v.classList.remove('active'));
-        
-        const target = document.getElementById(id);
-        if(target) {
-            target.classList.add('active');
-            // 觸發對應的刷新函數[span_3](start_span)[span_3](end_span)
-            if(id === 'v-notice') renderNotices();
-            if(id === 'v-mgr-keylist') renderKeyTable();
-            if(id === 'v-mgr-data') refreshStats();
-            if(id === 'v-mgr-user') renderUserTable();
-        }
+        document.getElementById(id).classList.add('active');
+        if(id === 'v-mgr-data') updateStats();
+        if(id === 'v-mgr-fb') renderAdminFB();
+        if(id === 'v-feedback') renderUserFB();
+        if(id === 'v-draw') renderDrawUI();
     }
 
-    // 4. 管理員功能[span_4](start_span)[span_4](end_span)
-    function checkAdmin() {
-        const pass = document.getElementById('adm-pass').value;
-        if(pass === "REO888") {
-            document.getElementById('admin-menu').style.display = 'block';
-            alert("管理權限已解鎖");
-            showView('v-mgr-data');
+    // --- 登入邏輯 ---
+    function handleLogin() {
+        const u = document.getElementById('user-u').value;
+        const p = document.getElementById('user-p').value;
+        const found = DB.users.find(x => x.u === u && x.p === p);
+        if(found) {
+            currentU = found;
+            document.getElementById('display-pts').innerText = currentU.pts;
+            document.getElementById('user-only-nav').style.display = 'block';
+            document.getElementById('login-section').innerHTML = `<h3>歡迎回來, ${u}!</h3>`;
+            alert("登入成功");
+            showView('v-pts-sys');
+        } else alert("密碼錯誤或用戶不存在");
+    }
+
+    // --- 積分簽到 ---
+    function dailySign() {
+        if(!currentU) return alert("請先登入");
+        const now = Date.now();
+        if(now - currentU.lastSign < 86400000) return alert("24小時內已簽到過");
+        currentU.pts += 5;
+        currentU.lastSign = now;
+        document.getElementById('display-pts').innerText = currentU.pts;
+        saveAll();
+        alert("簽到成功！+5 積分");
+    }
+
+    // --- 抽獎系統 (砸金蛋) ---
+    function renderDrawUI() {
+        const ui = document.getElementById('draw-status-ui');
+        if(!DB.lottery.active) {
+            ui.innerHTML = `<p style="color:red; text-align:center;">抽獎目前未開啟，請等待管理員廣播。</p>`;
+            document.getElementById('egg-box').style.pointerEvents = 'none';
         } else {
-            alert("密鑰錯誤！");
+            ui.innerHTML = `<p style="color:var(--primary); text-align:center;">抽獎進行中！名額：100名<br>特大獎(350pts) | 砸金蛋獲取好禮</p>`;
+            document.getElementById('egg-box').style.pointerEvents = 'auto';
         }
     }
 
-    function refreshStats() {
-        document.getElementById('count-u').innerText = db.users.length;
-        document.getElementById('count-k').innerText = db.keys.length;
-    }
+    function crackEgg(el) {
+        if(!currentU) return alert("請先登入");
+        if(currentU.draws >= 1) return alert("您已經抽過獎了！每人限抽一次。");
+        if(!DB.lottery.active) return;
 
-    function makeKeys() {
-        const n = document.getElementById('key-num').value;
-        for(let i=0; i<n; i++) {
-            const k = "REO_" + Math.random().toString(36).substring(2,10).toUpperCase();
-            db.keys.push({ code: k, status: '未使用' });
+        el.classList.add('broken');
+        el.innerText = "💥";
+        
+        const rand = Math.random() * 100;
+        let win = PRIZES[PRIZES.length - 1]; // 預設安慰獎
+
+        for(let p of PRIZES) {
+            if(rand <= p.prob) {
+                win = p;
+                break;
+            }
         }
-        saveDB();
-        renderKeyTable();
+
+        currentU.pts += win.pts;
+        currentU.draws = 1;
+        DB.lottery.winners += 1;
+        
+        document.getElementById('draw-result-text').innerText = `🎉 恭喜砸中：${win.name} (+${win.pts} 積分)!`;
+        document.getElementById('display-pts').innerText = currentU.pts;
+        saveAll();
     }
 
-    function renderKeyTable() {
-        const body = document.getElementById('key-list-body');
-        body.innerHTML = db.keys.map((k, i) => `
-            <tr>
-                <td>${k.code}</td>
-                <td style="color:lime">${k.status}</td>
-                <td><button onclick="deleteKey(${i})" style="color:red; background:none; border:none; cursor:pointer;">刪除</button></td>
-            </tr>
-        `).join('');
+    // --- 商店兌換 ---
+    function buyScript(cost, name) {
+        if(!currentU) return alert("請先登入");
+        if(currentU.pts < cost) return alert("積分不足！");
+        currentU.pts -= cost;
+        document.getElementById('display-pts').innerText = currentU.pts;
+        saveAll();
+        alert(`兌換成功！已獲取 ${name} 代碼。\n代碼已複製到剪貼簿。`);
+        copyTxt("-- 腳本代碼已加載 --");
     }
 
-    function deleteKey(i) {
-        db.keys.splice(i, 1);
-        saveDB();
-        renderKeyTable();
+    // --- 反饋系統 ---
+    function submitFeedback() {
+        if(!currentU) return alert("請先登入");
+        const content = document.getElementById('fb-content').value;
+        const type = document.getElementById('fb-type').value;
+        if(!content) return alert("請輸入內容");
+        
+        DB.feedbacks.unshift({
+            id: Date.now(),
+            user: currentU.u,
+            type: type,
+            content: content,
+            reply: null,
+            time: new Date().toLocaleString()
+        });
+        saveAll();
+        alert("提交成功");
+        renderUserFB();
     }
 
-    // 5. 公告功能[span_5](start_span)[span_5](end_span)
-    function saveNotice() {
-        const t = document.getElementById('new-notice-title').value;
-        const c = document.getElementById('new-notice-content').value;
-        if(!t || !c) return alert("請輸入內容");
-        db.notices.unshift({ title: t, content: c, time: new Date().toLocaleString() });
-        saveDB();
-        alert("公告已發布");
-        showView('v-notice');
-    }
-
-    function renderNotices() {
-        const container = document.getElementById('notice-display-list');
-        if(db.notices.length === 0) {
-            container.innerHTML = "<p style='color:#666'>目前沒有任何公告。</p>";
-            return;
-        }
-        container.innerHTML = db.notices.map(n => `
-            <div class="card" style="background:#222; border-left:4px solid var(--primary)">
-                <h3>${n.title}</h3>
-                <p style="margin:10px 0; font-size:14px; opacity:0.8;">${n.content}</p>
-                <small style="color:#666">${n.time}</small>
+    function renderUserFB() {
+        const box = document.getElementById('my-fb-history');
+        const mine = DB.feedbacks.filter(x => x.user === currentU.u);
+        box.innerHTML = mine.map(f => `
+            <div class="card" style="font-size:13px;">
+                <b>[${f.type}]</b> ${f.content} <br>
+                <small>${f.time}</small>
+                ${f.reply ? `<p style="color:var(--primary); margin-top:5px;">管理員回覆：${f.reply}</p>` : ''}
             </div>
         `).join('');
     }
 
-    // 6. 用戶功能
-    function handleLogin() {
-        const u = document.getElementById('user-u').value;
-        if(u) {
-            document.getElementById('logged-in-menu').style.display = 'block';
-            toggleLogin(false);
-            alert("歡迎回來：" + u);
-        }
+    // --- 管理員功能 ---
+    function checkAdmin() {
+        if(document.getElementById('adm-pass').value === "REO888") {
+            document.getElementById('admin-menu').style.display = 'block';
+            alert("後台已解鎖");
+            showView('v-mgr-data');
+        } else alert("密鑰錯誤");
     }
 
-    function dailySign() {
-        let p = parseInt(document.getElementById('my-pts').innerText);
-        p += 10;
-        document.getElementById('my-pts').innerText = p;
-        alert("簽到成功！+10 積分");
+    function toggleLottery() {
+        DB.lottery.active = !DB.lottery.active;
+        document.getElementById('draw-active-status').innerText = DB.lottery.active ? "進行中" : "已關閉";
+        document.getElementById('toggle-draw-btn').innerText = DB.lottery.active ? "關閉抽獎" : "開啟抽獎";
+        saveAll();
     }
 
-    function copyText() {
-        const area = document.getElementById('script-area');
-        area.select();
-        document.execCommand('copy');
-        alert("腳本代碼已複製到剪貼簿！");
-    }
-
-    function renderUserTable() {
-        document.getElementById('user-list-body').innerHTML = db.users.map(u => `
-            <tr><td>${u.name}</td><td>${u.pts}</td><td>普通用戶</td></tr>
+    function renderAdminFB() {
+        const list = document.getElementById('admin-fb-list');
+        list.innerHTML = DB.feedbacks.map(f => `
+            <div class="card">
+                <b>${f.user} [${f.type}]</b>: ${f.content} <br>
+                <input type="text" id="rep-${f.id}" placeholder="輸入回覆..." value="${f.reply || ''}">
+                <button class="btn" onclick="replyFB(${f.id})">回覆</button>
+                <button class="btn-red" onclick="deleteFB(${f.id})">刪除</button>
+            </div>
         `).join('');
     }
 
-    function saveDB() {
-        localStorage.setItem('REO_KEYS', JSON.stringify(db.keys));
-        localStorage.setItem('REO_NOTICES', JSON.stringify(db.notices));
-        localStorage.setItem('REO_USERS', JSON.stringify(db.users));
+    function replyFB(id) {
+        const val = document.getElementById(`rep-${id}`).value;
+        const target = DB.feedbacks.find(x => x.id === id);
+        target.reply = val;
+        saveAll();
+        alert("已回覆");
     }
 
-    // 初始載入
-    window.onload = () => {
-        renderNotices();
-    };
+    function generateKeys() {
+        const n = document.getElementById('key-count').value;
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%";
+        let out = "";
+        for(let i=0; i<n; i++) {
+            let k = "";
+            for(let j=0; j<12; j++) {
+                k += chars[Math.floor(Math.random()*chars.length)];
+                if((j+1)%3===0 && j<11) k += "_";
+            }
+            DB.keys.push(k);
+            out += k + "<br>";
+        }
+        saveAll();
+        document.getElementById('key-display-area').innerHTML = out;
+    }
+
+    function updateStats() {
+        document.getElementById('stat-u').innerText = DB.users.length;
+        document.getElementById('stat-k').innerText = DB.keys.length;
+    }
+
+    // --- 通用工具 ---
+    function saveAll() {
+        localStorage.setItem('REO_USERS', JSON.stringify(DB.users));
+        localStorage.setItem('REO_FB', JSON.stringify(DB.feedbacks));
+        localStorage.setItem('REO_KEYS', JSON.stringify(DB.keys));
+        localStorage.setItem('REO_LOTTERY_CFG', JSON.stringify(DB.lottery));
+    }
+
+    function copyTxt(t) {
+        navigator.clipboard.writeText(t);
+        alert("已複製到剪貼簿");
+    }
+
+    function deleteFB(id) {
+        if(!confirm("確定刪除此反饋？")) return;
+        DB.feedbacks = DB.feedbacks.filter(x => x.id !== id);
+        saveAll();
+        renderAdminFB();
+    }
 </script>
 
 </body>
